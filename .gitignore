@@ -203,4 +203,8 @@ pyrightconfig.json
 .history
 .ionide
 
+#EMACS autosaves
+*\#*\#
+*~
+
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,jupyternotebooks

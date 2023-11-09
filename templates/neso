@@ -1,0 +1,10 @@
+
+cd $job_results
+$run_prefix
+
+
+echo "Running NESO Electrostatic2D3V"
+
+echo ${neso_base_dir}$neso_solver $neso_conditions_file $neso_mesh_file
+
+${neso_base_dir}$neso_solver $neso_conditions_file $neso_mesh_file
