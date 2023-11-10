@@ -18,6 +18,7 @@ add_local_paths("FabNeso")
 def neso(config,
          solver="views/gcc-hipsycl/bin/Electrostatic2D3V",
          conditionsFileName="two_stream_conditions.xml",
+         meshFileName="two_stream_mesh.xml",
          **args):
 
     update_environment(args)
@@ -27,9 +28,9 @@ def neso(config,
     env.neso_solver = solver
 
     #This we presumably change somehow so that it gets changed throughout the SWEEP dir?
-    env.neso_conditions_file = find_config_file_path(config)+"/"+conditionsFileName
+    env.neso_conditions_file = find_config_file_path(config) +"/"+ conditionsFileName
     #All of these should be in a config file somewhere
-    env.neso_mesh_file = env.neso_base_dir + "examples/Electrostatic2D3V/two_stream/two_stream_mesh.xml"
+    env.neso_mesh_file = find_config_file_path(config) + "/" + meshFileName
 
     
     job(dict(script='neso', wall_time='0:15:0', memory='2G'), args)
@@ -39,6 +40,7 @@ def neso(config,
 def neso_ensemble(config,
                   solver="views/gcc-hipsycl/bin/Electrostatic2D3V",
                   conditionsFileName="two_stream_conditions.xml",
+                  meshFileName="two_stream_mesh.xml",
                   **args):
 
     path_to_config = find_config_file_path(config)
@@ -47,7 +49,7 @@ def neso_ensemble(config,
 
     env.neso_solver = solver
     env.neso_conditions_file = conditionsFileName
-    env.neso_mesh_file = env.neso_base_dir + "examples/Electrostatic2D3V/two_stream/two_stream_mesh.xml"
+    env.neso_mesh_file = meshFileName
     
     with_config(config)
     run_ensemble(config, sweep_dir, **args)
