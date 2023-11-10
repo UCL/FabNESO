@@ -24,6 +24,11 @@ __pycache__/
 # C extensions
 *.so
 
+# FabSim and NESO output files
+*.chk
+*.opt
+*.fld
+
 # Distribution / packaging
 .Python
 build/
