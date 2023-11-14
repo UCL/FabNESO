@@ -114,10 +114,14 @@ def createDictSweep(sweepPath,
 
 def copyDirContents(dirPath,
                     copyDir):
+    """ Copy the contents of copyDir -> dirPath """
+    
     for f in os.listdir(copyDir): shutil.copy(copyDir+f,dirPath)
 
 def makeDirectory(directoryName,
                   destructive):
+    """ Make the directory tree at directoryName. """
+    
     if os.path.isdir(directoryName):
         if destructive: shutil.rmtree(directoryName)
         else:
@@ -126,18 +130,20 @@ def makeDirectory(directoryName,
             return
     os.makedirs(directoryName)
 
-# Encode a configuration file with a dict of input values
 def encodeConditionsFile(inFileName,
                          paramDict):
+    """ Encode a configuration file with a dict of input values """
+
     
     for paramName in paramDict.keys(): editParameter(inFileName,
                                                      paramName,
                                                      paramDict[paramName])
         
-# Edit a single parameter in the configuration file to the desired value
 def editParameter(inFileName,
                   param,
                   val):
+    """ Edit a single parameter in the configuration 
+    file to the desired value """
     
     print("Edit {1} : {0}".format(val,param))
     data = []
