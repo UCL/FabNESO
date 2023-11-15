@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# This source file is part of the FabSim software toolkit, which is distributed under the BSD 3-Clause license.
+# This source file is part of the FabSim software toolkit, which is
+# distributed under the BSD 3-Clause license.
 # Please refer to LICENSE for detailed information regarding the licensing.
 #
 # This file contains FabSim definitions specific to FabNeso
@@ -27,8 +28,10 @@ def neso(config,
 
     env.neso_solver = solver
 
-    #This we presumably change somehow so that it gets changed throughout the SWEEP dir?
-    env.neso_conditions_file = find_config_file_path(config) +"/"+ conditionsFileName
+    #This we presumably change somehow so that it gets changed throughout
+    #the SWEEP dir?
+    env.neso_conditions_file = (find_config_file_path(config)+
+                                "/" + conditionsFileName)
     #All of these should be in a config file somewhere
     env.neso_mesh_file = find_config_file_path(config) + "/" + meshFileName
 

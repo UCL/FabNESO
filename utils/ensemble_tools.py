@@ -18,11 +18,13 @@ def createDirTree(sweepPath,
     """ Create a directory tree in the sweepPath """
 
     copyFiles = os.path.isdir(copyDir)
-    if not copyFiles: print ("No correct copy dir found, just "
-                             "creating the tree for now!")
+    if not copyFiles:
+        print ("No correct copy dir found, just "
+               "creating the tree for now!")
 
     #Make the base directory
-    if not makeDirectory(sweepPath,destructive): return
+    if not makeDirectory(sweepPath,destructive):
+        return
 
     # Set the initial value of the scanned parameter to the lower limit
     paraVal = scanRange[0]  
@@ -32,7 +34,8 @@ def createDirTree(sweepPath,
         #Make the directory
         os.makedirs(newDir)
         #If we're copying files, do so
-        if copyFiles: copyDirContents(newDir,copyDir)
+        if copyFiles:
+            copyDirContents(newDir,copyDir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
         if os.path.isfile(newDir+editFile) and parameterToScan:
@@ -80,10 +83,12 @@ def createDictSweep(sweepPath,
                 if comb[j].startswith(searchTerm):
                     recordComb = False
                     break
-        if recordComb: allConfigs.append(comb)
+        if recordComb:
+            allConfigs.append(comb)
 
     # If destructive, let's delete the whole tree if it already exists
-    if destructive and os.path.isdir(sweepPath): shutil.rmtree(sweepPath)
+    if destructive and os.path.isdir(sweepPath):
+        shutil.rmtree(sweepPath)
     # Check whether the copy directory exists
     copyFiles = os.path.isdir(copyDir)
     # Now loop over each combination, create a directory, copy the
@@ -93,14 +98,16 @@ def createDictSweep(sweepPath,
         dirName = "-".join(comb)
         dirPath = "{0}/SWEEP/{1}".format(sweepPath,dirName)
         makeDirectory(dirPath,destructive)
-        if copyFiles: copyDirContents(dirPath,copyDir)
+        if copyFiles:
+            copyDirContents(dirPath,copyDir)
         # Create parameter map for conditions encoding
         parameters = {}
         for parameter in parameterDict.keys():
             paramIndex = [item for item in comb
                           if item.startswith(parameter)][0].split("_")[-1]
             parameters[parameter] = scanPoints[parameter][int(paramIndex)]
-        if editFile: encodeConditionsFile(dirPath+"/"+editFile,parameters)
+        if editFile:
+            encodeConditionsFile(dirPath+"/"+editFile,parameters)
     return 0
 
 def copyDirContents(dirPath,
@@ -114,7 +121,8 @@ def makeDirectory(directoryName,
     """ Make the directory tree at directoryName. """
     
     if os.path.isdir(directoryName):
-        if destructive: shutil.rmtree(directoryName)
+        if destructive:
+            shutil.rmtree(directoryName)
         else:
             print("Path already exists and "
                   "not in destructive mode! Returning")
@@ -127,9 +135,10 @@ def encodeConditionsFile(inFileName,
     """ Encode a configuration file with a dict of input values """
 
     
-    for paramName in paramDict.keys(): editParameter(inFileName,
-                                                     paramName,
-                                                     paramDict[paramName])
+    for paramName in paramDict.keys():
+        editParameter(inFileName,
+                      paramName,
+                      paramDict[paramName])
         
 def editParameter(inFileName,
                   param,
@@ -149,5 +158,5 @@ def editParameter(inFileName,
         newData.append(line)
 
     with open(inFileName,"w") as outFile:
-        for line in newData: outFile.writelines(line)
-        
+        for line in newData:
+            outFile.writelines(line)
