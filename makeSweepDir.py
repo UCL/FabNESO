@@ -1,7 +1,5 @@
-""" A helper script that will create a directory tree for a sweep and at
- some point vary a parameter in the desired file. Probably using sed.
-
- Update docs when its done I guess? If we decide to keep this
+""" A module to create input directories and encode 
+configfurations for FabNESO
 """
 
 import os
@@ -24,14 +22,11 @@ def createDirTree(sweepPath,
     copyFiles = os.path.isdir(copyDir)
     if not copyFiles: print ("No correct copy dir found, just "
                              "creating the tree for now!")
-    
-    if os.path.isdir(sweepPath):
-        if destructive: shutil.rmtree(sweepPath)
-        else:
-            print("Path already exists and not in destructive mode! Returning")
-            return
 
-        # Set the initial value of the scanned parameter to the lower limit
+    #Make the base directory
+    if not makeDirectory(sweepPath,destructive): return
+
+    # Set the initial value of the scanned parameter to the lower limit
     paraVal = scanRange[0]  
 
     for i in range(nDirs):
@@ -39,8 +34,7 @@ def createDirTree(sweepPath,
         #Make the directory
         os.makedirs(newDir)
         #If we're copying files, do so
-        if copyFiles:
-            for f in os.listdir(copyDir): shutil.copy(copyDir+f,newDir)
+        if copyFiles: copyDirContents(newDir,copyDir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
         if os.path.isfile(newDir+editFile) and parameterToScan:
@@ -48,14 +42,13 @@ def createDirTree(sweepPath,
         #iterate paraVal
         paraVal+=(scanRange[1]-scanRange[0])/float(nDirs-1)
 
-# Make a multi-dimensional scan of several parameters
+
 def createDictSweep(sweepPath,
                     nDirs,
                     destructive,
                     copyDir,
                     editFile,
                     parameterDict):
-
     """ Use a dictionary with each parameter's high and low to create
     a multi-dimensional sweep directory """
     
@@ -127,8 +120,9 @@ def makeDirectory(directoryName,
         else:
             print("Path already exists and "
                   "not in destructive mode! Returning")
-            return
+            return 0
     os.makedirs(directoryName)
+    return 1
 
 def encodeConditionsFile(inFileName,
                          paramDict):
