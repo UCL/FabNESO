@@ -1,17 +1,15 @@
-""" Run ther create directory methods of the enseble_tools module
+""" Makes a sweep directory for FabNeso
 """
 
 from ensemble_tools import create_dir_tree, create_dict_sweep
 
 import argparse
-import sys
+from ast import literal_eval
 
 
 def main():
     # Make the argument parser
-    parser = argparse.ArgumentParser(
-        prog="makeSweepDir", description="Makes a sweep directory for FabNeso"
-    )
+    parser = argparse.ArgumentParser(description="Makes a sweep directory for FabNeso")
     parser.add_argument(
         "--sweep_path",
         dest="sweep_path",
@@ -39,7 +37,7 @@ def main():
     )
     parser.add_argument(
         "--para_to_template",
-        help="The parameter in the config " "file to template for the scan",
+        help="The parameter in the config file to template for the scan",
         default="",
     )
     parser.add_argument(
@@ -59,9 +57,11 @@ def main():
     if args.parameter_dict:
         # If this has been specified, we'll automatically create
         # the directory tree as a multidimensional scan of these points
-        parameter_dict = eval(args.parameter_dict)
-        # Probably insert here a check that the dict is of the correct
-        # format before we start running the execution?
+        parameter_dict = literal_eval(args.parameter_dict)
+        # Check we have made a dict
+        if not isinstance(parameter_dict, dict):
+            raise ValueError("Did not receive a dict as input fopr parameter_dict")
+        # Use the dict to create a sweep directory
         create_dict_sweep(
             args.sweep_path,
             args.n_divs,
@@ -71,18 +71,17 @@ def main():
             parameter_dict,
         )
 
-        sys.exit(0)
-
-    create_dir_tree(
-        args.sweep_path,
-        args.n_divs,
-        args.destructive,
-        args.copy_dir,
-        args.edit_file,
-        args.para_to_template,
-        [args.scan_min, args.scan_max],
-        args.dir_prefix,
-    )
+    else:
+        create_dir_tree(
+            args.sweep_path,
+            args.n_divs,
+            args.destructive,
+            args.copy_dir,
+            args.edit_file,
+            args.para_to_template,
+            [args.scan_min, args.scan_max],
+            args.dir_prefix,
+        )
 
 
 if __name__ == "__main__":

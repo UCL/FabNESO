@@ -22,26 +22,28 @@ def create_dir_tree(
 
     copy_files = os.path.isdir(copy_dir)
     if not copy_files:
-        print("No correct copy dir found, just " "creating the tree for now!")
+        print("No correct copy dir found, just creating the tree for now!")
 
     # Make the base directory
-    if not make_directory(sweep_path, destructive):
+    try:
+        make_directory(sweep_path, destructive)
+    except FileExistsError:
         return
 
     # Set the initial value of the scanned parameter to the lower limit
     para_val = scan_range[0]
 
     for i in range(n_dirs):
-        newDir = "{0}/SWEEP/{2}{1}/".format(sweep_path, i, outdir_prefix)
+        new_dir = Path(sweep_path) / "SWEEP" / outdir_prefix + i
         # Make the directory
-        os.makedirs(newDir)
+        os.makedirs(new_dir)
         # If we're copying files, do so
         if copy_files:
-            copy_dir_contents(newDir, copy_dir)
+            copy_dir_contents(new_dir, copy_dir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
-        if os.path.isfile(newDir + edit_file) and parameter_to_scan:
-            edit_parameter(newDir + edit_file, parameter_to_scan, para_val)
+        if os.path.isfile(new_dir + edit_file) and parameter_to_scan:
+            edit_parameter(new_dir + edit_file, parameter_to_scan, para_val)
         # iterate para_val
         para_val += (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
 
@@ -53,10 +55,9 @@ def create_dict_sweep(
     a multi-dimensional sweep directory"""
 
     print(
-        "{0} parameters found, requiring {1} divisions per parameter. "
-        "Creating {2} configurations...".format(
-            len(parameter_dict.keys()), n_dirs, n_dirs ** len(parameter_dict.keys())
-        )
+        f"{len(parameter_dict)} parameters found, "
+        f"requiring {n_dirs} divisions per parameter. "
+        f"Creating {n_dirs ** len(parameter_dict)} configurations..."
     )
 
     # Calculate all of the parameter values and put them in a dict
@@ -67,7 +68,7 @@ def create_dict_sweep(
         scan_points[parameter] = []
         for i in range(n_dirs):
             scan_points[parameter].append(param_value)
-            list_all.append("{0}_{1}".format(parameter, i))
+            list_all.append(f"{parameter}_{i}")
             param_value += (
                 parameter_dict[parameter][1] - parameter_dict[parameter][0]
             ) / float(n_dirs - 1)
@@ -95,8 +96,8 @@ def create_dict_sweep(
     # configs and conditions, and edit the configuation to contain
     # the correct parameters.
     for comb in all_configs:
-        dirName = "-".join(comb)
-        dir_path = "{0}/SWEEP/{1}".format(sweep_path, dirName)
+        dir_name = "-".join(comb)
+        dir_path = Path(sweep_path) / "SWEEP" / dir_name
         make_directory(dir_path, destructive)
         if copy_files:
             copy_dir_contents(dir_path, copy_dir)
@@ -109,7 +110,6 @@ def create_dict_sweep(
             parameters[parameter] = scan_points[parameter][int(param_index)]
         if edit_file:
             encode_conditions_file(Path(dir_path) / edit_file, parameters)
-    return 0
 
 
 def copy_dir_contents(dir_path, copy_dir):
@@ -126,10 +126,9 @@ def make_directory(directory_name, destructive):
         if destructive:
             shutil.rmtree(directory_name)
         else:
-            print("Path already exists and " "not in destructive mode! Returning")
-            return 0
+            msg = "Path already exists and not in destructive mode"
+            raise FileExistsError(msg)
     os.makedirs(directory_name)
-    return 1
 
 
 def encode_conditions_file(in_file_name, param_dict):
@@ -143,17 +142,16 @@ def edit_parameter(in_file_name, param, val):
     """Edit a single parameter in the configuration
     file to the desired value"""
 
-    print("Edit {1} : {0}".format(val, param))
+    print(f"Edit {param} : {val}")
     data = []
-    with open(in_file_name, "r") as inFile:
-        data = inFile.readlines()
+    with open(in_file_name, "r") as in_file:
+        data = in_file.readlines()
 
-    newData = []
+    new_data = []
     for line in data:
         if param in line:
-            line = line.split("=")[0] + "= {0} </P>\n".format(val)
-        newData.append(line)
+            line = line.split("=")[0] + f"= {val} </P>\n"
+        new_data.append(line)
 
-    with open(in_file_name, "w") as outFile:
-        for line in newData:
-            outFile.writelines(line)
+    with open(in_file_name, "w") as out_file:
+        out_file.writelines(new_data)
