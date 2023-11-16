@@ -33,14 +33,14 @@
             <P> TFinal        = NumSteps*TimeStep </P>
             <P> IO_InfoSteps  = NumSteps/16     </P>
             <P> IO_CheckSteps = NumSteps/2      </P>
-	    <P> growth_rates_recording_step = NumSteps/5 </P>
+            <P> growth_rates_recording_step = NumSteps/5 </P>
             <!-- Magnetic field strength -->
             <P> Bxy      = 1.0 </P>
             <!-- d22 Coeff for Helmholtz solve -->
-            <P> d22      = 0.0 </P> 
+            <P> d22      = 0.0 </P>
             <!-- HW params -->
             <P> HW_alpha = 0.1 </P>
-            <P> HW_kappa = 3.5 </P> 
+            <P> HW_kappa = 3.5 </P>
             <!-- Scaling factor for ICs -->
             <P> s        = 0.5 </P>
             <!-- No particles -->
@@ -74,7 +74,7 @@
                 <P VAR="w"   VALUE="[0]" />
                 <P VAR="phi" VALUE="[0]" />
             </REGION>
-	        <REGION REF="2">
+                <REGION REF="2">
                 <P VAR="ne"  VALUE="[3]" />
                 <P VAR="w"   VALUE="[3]" />
                 <P VAR="phi" VALUE="[3]" />
