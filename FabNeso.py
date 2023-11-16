@@ -13,6 +13,7 @@ try:
 except ImportError:
     import base.fab as fab
 
+from pathlib import Path
 
 fab.add_local_paths("FabNeso")
 
@@ -34,10 +35,10 @@ def neso(
     # This we presumably change somehow so that it gets changed throughout
     # the SWEEP dir?
     fab.env.neso_conditions_file = (
-        fab.find_config_file_path(config) + "/" + conditions_file_name
+        Path(fab.find_config_file_path(config)) / conditions_file_name
     )
     # All of these should be in a config file somewhere
-    fab.env.neso_mesh_file = fab.find_config_file_path(config) + "/" + mesh_file_name
+    fab.env.neso_mesh_file = Path(fab.find_config_file_path(config)) / mesh_file_name
 
     fab.job(dict(script="neso", wall_time="0:15:0", memory="2G"), args)
 

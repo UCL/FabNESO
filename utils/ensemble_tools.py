@@ -5,6 +5,7 @@ configfurations for FabNESO
 import os
 import shutil
 import itertools
+from pathlib import Path
 
 
 def create_dir_tree(
@@ -107,7 +108,7 @@ def create_dict_sweep(
             ].split("_")[-1]
             parameters[parameter] = scan_points[parameter][int(param_index)]
         if edit_file:
-            encode_conditions_file(dir_path + "/" + edit_file, parameters)
+            encode_conditions_file(Path(dir_path) / edit_file, parameters)
     return 0
 
 
