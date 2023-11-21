@@ -1,11 +1,8 @@
-#
-# This source file is part of the FabSim software toolkit, which is
-# distributed under the BSD 3-Clause license.
-# Please refer to LICENSE for detailed information regarding the licensing.
-#
-# This file contains FabSim definitions specific to FabNeso
-#
-# authors: Duncan Leggat
+"""
+Task definitions for FabNESO plug-in to FabSIM software toolkit.
+
+Defines tasks for running simulations using Neptune Exploratory Software (NESO).
+"""
 
 from pathlib import Path
 
@@ -29,6 +26,15 @@ def neso(
     memory_in="2G",
     **args
 ):
+    """
+    Run one NESO instance1
+
+    parameters:
+      - config: Directory with configuration information
+      - solver: Which NESO solver to use
+      - conditions_file_name: Path to conditions file
+      - mesh_file_name: Path to mesh file for NESO
+    """
     fab.update_environment(args)
     fab.with_config(config)
     fab.execute(fab.put_configs, config)
@@ -55,6 +61,15 @@ def neso_ensemble(
     mesh_file_name="two_stream_mesh.xml",
     **args
 ):
+    """
+    Run NESO ensemble
+
+    parameters:
+      - config: Directory containing SWEEP configurations
+      - solver: Which NESO solver to use
+      - conditions_file_name: Path to conditions file
+      - mesh_file_name: Path to mesh file for NESO
+    """
     path_to_config = fab.find_config_file_path(config)
     sweep_dir = str((Path(path_to_config) / "SWEEP"))
     fab.env.script = "neso"
