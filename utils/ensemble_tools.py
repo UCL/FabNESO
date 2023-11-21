@@ -5,7 +5,9 @@ configfurations for FabNESO
 import os
 import shutil
 import itertools
+import re
 from pathlib import Path
+import lxml.etree as ET
 
 
 def create_dir_tree(
@@ -142,15 +144,23 @@ def edit_parameter(in_file_name, param, val):
     file to the desired value"""
 
     print(f"Edit {param} : {val}")
-    data = []
-    with open(in_file_name, "r") as in_file:
-        data = in_file.readlines()
 
-    new_data = []
-    for line in data:
-        if param in line:
-            line = line.split("=")[0] + f"= {val} </P>\n"
-        new_data.append(line)
-
-    with open(in_file_name, "w") as out_file:
-        out_file.writelines(new_data)
+    data = ET.parse(in_file_name)
+    root = data.getroot()
+    parameters = root.find("CONDITIONS").find("PARAMETERS")
+    for element in parameters.iter("P"):
+        match = re.match(
+            r"\s*(?P<key>\w+)\s*=\s*(?P<value>[0-9.-]+)\s*",
+            element.text,
+        )
+        if match is None:
+            # This happens for the constructed elements, so skip them
+            continue
+        key = match.group("key")
+        if key == param:
+            new_element = ET.Element("P")
+            new_element.text = f" {param} = {val} "
+            parameters.insert(parameters.index(element), new_element)
+            parameters.remove(element)
+    ET.indent(root, space="    ")
+    data.write(in_file_name)
