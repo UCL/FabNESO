@@ -115,8 +115,7 @@ def create_dict_sweep(
 def copy_dir_contents(dir_path, copy_dir):
     """Copy the contents of copy_dir -> dir_path"""
 
-    for f in os.listdir(copy_dir):
-        shutil.copy(copy_dir + f, dir_path)
+    shutil.copytree(copy_dir, dir_path, dirs_exist_ok=True)
 
 
 def make_directory(directory_name, destructive):
