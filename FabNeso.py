@@ -19,6 +19,7 @@ fab.add_local_paths("FabNeso")
 
 
 @fab.task
+@fab.load_plugin_env_vars("FabNeso")
 def neso(
     config,
     solver="views/gcc-hipsycl/bin/Electrostatic2D3V",
@@ -46,6 +47,7 @@ def neso(
 
 
 @fab.task
+@fab.load_plugin_env_vars("FabNeso")
 def neso_ensemble(
     config,
     solver="views/gcc-hipsycl/bin/Electrostatic2D3V",
@@ -54,7 +56,7 @@ def neso_ensemble(
     **args
 ):
     path_to_config = fab.find_config_file_path(config)
-    sweep_dir = Path(path_to_config) / "SWEEP"
+    sweep_dir = str((Path(path_to_config) / "SWEEP"))
     fab.env.script = "neso"
 
     fab.env.neso_solver = solver
