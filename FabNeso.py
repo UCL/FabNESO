@@ -19,7 +19,7 @@ fab.add_local_paths("FabNeso")
 @fab.load_plugin_env_vars("FabNeso")
 def neso(
     config,
-    solver="views/gcc-hipsycl/bin/Electrostatic2D3V",
+    solver="Electrostatic2D3V",
     conditions_file_name="two_stream_conditions.xml",
     mesh_file_name="two_stream_mesh.xml",
     wall_time_in="0:15:0",
@@ -56,7 +56,7 @@ def neso(
 @fab.load_plugin_env_vars("FabNeso")
 def neso_ensemble(
     config,
-    solver="views/gcc-hipsycl/bin/Electrostatic2D3V",
+    solver="Electrostatic2D3V",
     conditions_file_name="two_stream_conditions.xml",
     mesh_file_name="two_stream_mesh.xml",
     **args
