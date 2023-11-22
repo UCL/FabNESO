@@ -5,6 +5,7 @@ from ensemble_tools import create_dir_tree, create_dict_sweep
 
 import argparse
 from ast import literal_eval
+from pathlib import Path
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
     parser.add_argument(
         "--copy_dir",
         help="Copy contents of this dir to the sweep dirs",
-        default="plugins/FabNeso/config_files/toCopy/",
+        default=Path(__file__).parent.parent / "config_files" / "toCopy",
     )
     parser.add_argument(
         "--edit_file",
