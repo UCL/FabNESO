@@ -7,7 +7,7 @@ import shutil
 import itertools
 import re
 from pathlib import Path
-import lxml.etree as ET
+import xml.etree.ElementTree as ET
 
 
 def create_dir_tree(
@@ -36,7 +36,7 @@ def create_dir_tree(
     para_val = scan_range[0]
 
     for i in range(n_dirs):
-        new_dir = Path(sweep_path) / "SWEEP" / outdir_prefix + i
+        new_dir = Path(sweep_path) / "SWEEP" / f"{outdir_prefix}{i}"
         # Make the directory
         os.makedirs(new_dir)
         # If we're copying files, do so
@@ -145,7 +145,9 @@ def edit_parameter(in_file_name, param, val):
 
     print(f"Edit {param} : {val}")
 
-    data = ET.parse(in_file_name)
+    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+
+    data = ET.parse(in_file_name, parser=parser)
     root = data.getroot()
     parameters = root.find("CONDITIONS").find("PARAMETERS")
     for element in parameters.iter("P"):
@@ -158,9 +160,6 @@ def edit_parameter(in_file_name, param, val):
             continue
         key = match.group("key")
         if key == param:
-            new_element = ET.Element("P")
-            new_element.text = f" {param} = {val} "
-            parameters.insert(parameters.index(element), new_element)
-            parameters.remove(element)
-    ET.indent(root, space="    ")
+            element.text = f" {param} = {val} "
+
     data.write(in_file_name)
