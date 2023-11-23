@@ -22,8 +22,6 @@ def neso(
     solver="Electrostatic2D3V",
     conditions_file_name="two_stream_conditions.xml",
     mesh_file_name="two_stream_mesh.xml",
-    wall_time_in="0:15:0",
-    memory_in="2G",
     **args
 ):
     """
@@ -49,7 +47,7 @@ def neso(
     # All of these should be in a config file somewhere
     fab.env.neso_mesh_file = Path(fab.find_config_file_path(config)) / mesh_file_name
 
-    fab.job(dict(script="neso", wall_time=wall_time_in, memory=memory_in), args)
+    fab.job(dict(script="neso"), args)
 
 
 @fab.task
