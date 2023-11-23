@@ -48,7 +48,7 @@ def create_dir_tree(
         if parameter_to_scan is None:
             msg = "parameter_to_scan not defined"
             raise TypeError(msg)
-        edit_parameter(new_dir / edit_file, parameter_to_scan, para_val)
+        edit_parameters(new_dir / edit_file, {parameter_to_scan: para_val})
         # iterate para_val
         para_val += (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
 
@@ -114,7 +114,7 @@ def create_dict_sweep(
             ].split("_")[-1]
             parameters[parameter] = scan_points[parameter][int(param_index)]
         if edit_file:
-            encode_conditions_file(Path(dir_path) / edit_file, parameters)
+            edit_parameters(Path(dir_path) / edit_file, parameters)
 
 
 def copy_dir_contents(dir_path, copy_dir):
@@ -135,18 +135,9 @@ def make_directory(directory_name, destructive):
     os.makedirs(directory_name)
 
 
-def encode_conditions_file(in_file_name, param_dict):
-    """Encode a configuration file with a dict of input values"""
-
-    for param_name in param_dict.keys():
-        edit_parameter(in_file_name, param_name, param_dict[param_name])
-
-
-def edit_parameter(in_file_name, param, val):
+def edit_parameters(in_file_name, param_overrides):
     """Edit a single parameter in the configuration
     file to the desired value"""
-
-    print(f"Edit {param} : {val}")
 
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
 
@@ -159,7 +150,7 @@ def edit_parameter(in_file_name, param, val):
             element.text,
         )
         key = match.group("key")
-        if key == param:
-            element.text = f" {param} = {val} "
+        if key in param_overrides:
+            element.text = f" {key} = {param_overrides[key]} "
 
     data.write(in_file_name)
