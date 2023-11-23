@@ -1,156 +1,121 @@
-""" A module to create input directories and encode
-configfurations for FabNESO
-"""
+""" A module to create input directories and encode configurations for FabNESO."""
+
+from __future__ import annotations
 
 import os
 import shutil
 import itertools
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 import xml.etree.ElementTree as ET
+
+if TYPE_CHECKING:
+    from typing import Iterator
 
 
 def create_dir_tree(
-    sweep_path,
-    n_dirs,
-    destructive,
-    copy_dir,
-    edit_file,
-    parameter_to_scan,
-    scan_range,
-    outdir_prefix,
+    sweep_path: Path,
+    n_dirs: int,
+    destructive: bool,
+    copy_dir: Path,
+    edit_file: str,
+    parameter_to_scan: str,
+    scan_range: tuple[float, float],
+    outdir_prefix: str,
 ):
     """Create a directory tree in the sweep_path"""
 
-    copy_files = os.path.isdir(copy_dir)
-    if not copy_files:
-        print("No correct copy dir found, just creating the tree for now!")
+    copy_dir = Path(copy_dir)
+    if not copy_dir.is_dir():
+        msg = f"copy_dir {copy_dir} does not exist"
+        raise FileNotFoundError(msg)
+    if not (copy_dir / edit_file).is_file():
+        msg = f"edit_file {copy_dir / edit_file} does not exist"
+        raise FileNotFoundError(msg)
+    if parameter_to_scan is None:
+        msg = "parameter_to_scan not defined"
+        raise TypeError(msg)
 
     # Make the base directory
-    make_directory(sweep_path, destructive)
+    if os.path.isdir(sweep_path):
+        if destructive:
+            shutil.rmtree(sweep_path)
+        else:
+            msg = "Path already exists and not in destructive mode"
+            raise FileExistsError(msg)
+    os.makedirs(sweep_path)
 
     # Set the initial value of the scanned parameter to the lower limit
     para_val = scan_range[0]
 
     for i in range(n_dirs):
         new_dir = Path(sweep_path) / "SWEEP" / f"{outdir_prefix}{i}"
-        # Make the directory
-        os.makedirs(new_dir)
-        # If we're copying files, do so
-        if copy_files:
-            copy_dir_contents(new_dir, copy_dir)
+        shutil.copytree(copy_dir, new_dir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
-        msg = ""
-        if not (new_dir / edit_file).is_file():
-            msg = f"{new_dir / edit_file} does not exist"
-            raise FileNotFoundError(msg)
-        if parameter_to_scan is None:
-            msg = "parameter_to_scan not defined"
-            raise TypeError(msg)
         edit_parameters(new_dir / edit_file, {parameter_to_scan: para_val})
         # iterate para_val
         para_val += (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
 
 
+def _product_dict(input_dict: dict) -> Iterator[dict]:
+    """Compute a Cartesian product of a dictionary of iterables."""
+    keys = input_dict.keys()
+    for values in itertools.product(*input_dict.values()):
+        yield dict(zip(keys, values))
+
+
 def create_dict_sweep(
-    sweep_path, n_dirs, destructive, copy_dir, edit_file, parameter_dict
+    sweep_path: Path,
+    n_divs: int,
+    destructive: bool,
+    copy_dir: Path,
+    edit_file: str,
+    parameter_dict: dict[str, tuple[float, float]],
 ):
-    """Use a dictionary with each parameter's high and low to create
-    a multi-dimensional sweep directory"""
-
-    print(
-        f"{len(parameter_dict)} parameters found, "
-        f"requiring {n_dirs} divisions per parameter. "
-        f"Creating {n_dirs ** len(parameter_dict)} configurations..."
-    )
-
-    # Calculate all of the parameter values and put them in a dict
-    scan_points = {}
-    list_all = []
-    for parameter in parameter_dict.keys():
-        param_value = parameter_dict[parameter][0]
-        scan_points[parameter] = []
-        for i in range(n_dirs):
-            scan_points[parameter].append(param_value)
-            list_all.append(f"{parameter}_{i}")
-            param_value += (
-                parameter_dict[parameter][1] - parameter_dict[parameter][0]
-            ) / float(n_dirs - 1)
-
-    # Create the combinations of these parameters.
-    combinations = list(itertools.combinations(list_all, len(parameter_dict.keys())))
-    all_configs = []
-    for comb in combinations:
-        record_comb = True
-        for i in range(len(comb) - 1):
-            search_term = comb[i][: len(comb[i]) - comb[i][::-1].find("_")]
-            for j in range(i + 1, len(comb)):
-                if comb[j].startswith(search_term):
-                    record_comb = False
-                    break
-        if record_comb:
-            all_configs.append(comb)
-
-    # If destructive, let's delete the whole tree if it already exists
+    """Use a dictionary with each parameter interval to create a sweep directory."""
+    # If destructive, delete the whole tree if it already exists
     if destructive and os.path.isdir(sweep_path):
         shutil.rmtree(sweep_path)
-    # Check whether the copy directory exists
-    copy_files = os.path.isdir(copy_dir)
-    # Now loop over each combination, create a directory, copy the
-    # configs and conditions, and edit the configuation to contain
-    # the correct parameters.
-    for comb in all_configs:
-        dir_name = "-".join(comb)
-        dir_path = Path(sweep_path) / "SWEEP" / dir_name
-        make_directory(dir_path, destructive)
-        if copy_files:
-            copy_dir_contents(dir_path, copy_dir)
-        # Create parameter map for conditions encoding
-        parameters = {}
-        for parameter in parameter_dict.keys():
-            param_index = [item for item in comb if item.startswith(parameter)][
-                0
-            ].split("_")[-1]
-            parameters[parameter] = scan_points[parameter][int(param_index)]
-        if edit_file:
-            edit_parameters(Path(dir_path) / edit_file, parameters)
+    # Uniformly spaced grids on [low, high] for each parameter
+    parameter_grids = {
+        key: [low + (i / (n_divs - 1)) * (high - low) for i in range(n_divs)]
+        for key, (low, high) in parameter_dict.items()
+    }
+    # Compute Cartesian products of all parameter value combinations plus grid indices
+    for parameter_values, indices in zip(
+        _product_dict(parameter_grids),
+        itertools.product(*(range(n_divs),) * len(parameter_dict)),
+    ):
+        directory_name = "-".join(f"{k}_{i}" for k, i in zip(parameter_values, indices))
+        directory_path = Path(sweep_path) / "SWEEP" / directory_name
+        shutil.copytree(copy_dir, directory_path)
+        edit_parameters(directory_path / edit_file, parameter_values)
 
 
-def copy_dir_contents(dir_path, copy_dir):
-    """Copy the contents of copy_dir -> dir_path"""
-
-    shutil.copytree(copy_dir, dir_path, dirs_exist_ok=True)
-
-
-def make_directory(directory_name, destructive):
-    """Make the directory tree at directory_name."""
-
-    if os.path.isdir(directory_name):
-        if destructive:
-            shutil.rmtree(directory_name)
-        else:
-            msg = "Path already exists and not in destructive mode"
-            raise FileExistsError(msg)
-    os.makedirs(directory_name)
-
-
-def edit_parameters(in_file_name, param_overrides):
-    """Edit a single parameter in the configuration
-    file to the desired value"""
-
+def edit_parameters(conditions_file: Path, parameter_overrides: dict[str, float]):
+    """Edit parameters in the configuration file to the desired value."""
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-
-    data = ET.parse(in_file_name, parser=parser)
+    data = ET.parse(conditions_file, parser=parser)
     root = data.getroot()
-    parameters = root.find("CONDITIONS").find("PARAMETERS")
+    conditions = root.find("CONDITIONS")
+    if conditions is None:
+        msg = f"Conditions file {conditions_file} does not contain a CONDITIONS node."
+        raise ValueError(msg)
+    parameters = conditions.find("PARAMETERS")
+    if parameters is None:
+        msg = f"Conditions file {conditions_file} does not contain a PARAMETERS node."
+        raise ValueError(msg)
     for element in parameters.iter("P"):
-        match = re.match(
-            r"\s*(?P<key>\w+)\s*=",
-            element.text,
-        )
+        if element.text is None:
+            msg = f"Parameter element {element} does contain a definition."
+            raise ValueError(msg)
+        match = re.match(r"\s*(?P<key>\w+)\s*=", element.text)
+        if match is None:
+            msg = f"Parameter definition of unexpected format: {element.text}"
+            raise ValueError(msg)
         key = match.group("key")
-        if key in param_overrides:
-            element.text = f" {key} = {param_overrides[key]} "
-
-    data.write(in_file_name)
+        if key in parameter_overrides:
+            element.text = f" {key} = {parameter_overrides[key]} "
+    data.write(conditions_file)
