@@ -155,12 +155,9 @@ def edit_parameter(in_file_name, param, val):
     parameters = root.find("CONDITIONS").find("PARAMETERS")
     for element in parameters.iter("P"):
         match = re.match(
-            r"\s*(?P<key>\w+)\s*=\s*(?P<value>[0-9.-]+)\s*",
+            r"\s*(?P<key>\w+)\s*=",
             element.text,
         )
-        if match is None:
-            # This happens for the constructed elements, so skip them
-            continue
         key = match.group("key")
         if key == param:
             element.text = f" {param} = {val} "
