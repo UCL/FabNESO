@@ -9,7 +9,7 @@ from pathlib import Path
 try:
     import fabsim.base.fab as fab
 except ImportError:
-    import base.fab as fab
+    import base.fab as fab  # type: ignore
 
 
 fab.add_local_paths("FabNESO")
@@ -18,64 +18,58 @@ fab.add_local_paths("FabNESO")
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso(
-    config,
-    solver="Electrostatic2D3V",
-    conditions_file_name="two_stream_conditions.xml",
-    mesh_file_name="two_stream_mesh.xml",
-    **args
+    config: str,
+    solver: str = "Electrostatic2D3V",
+    conditions_file_name: str = "conditions.xml",
+    mesh_file_name: str = "mesh.xml",
 ):
     """
-    Run one NESO instance1
+    Run a single NESO solver instance.
 
-    parameters:
-      - config: Directory with configuration information
-      - solver: Which NESO solver to use
-      - conditions_file_name: Path to conditions file
-      - mesh_file_name: Path to mesh file for NESO
+    Args:
+        config: Directory with single run configuration information.
+        solver: Which NESO solver to use.
+        conditions_file_name: Name of conditions XML file in configuration directory.
+        mesh_file_name: Name of mesh XML in configuration directory.
     """
-    fab.update_environment(args)
     fab.with_config(config)
     fab.execute(fab.put_configs, config)
-
-    fab.env.neso_solver = solver
-
-    # This we presumably change somehow so that it gets changed throughout
-    # the SWEEP dir?
-    fab.env.neso_conditions_file = (
-        #        Path(fab.find_config_file_path(config)) / conditions_file_name
-        conditions_file_name
+    fab.job(
+        {
+            "script": "neso",
+            "neso_solver": solver,
+            "neso_conditions_file": conditions_file_name,
+            "neso_mesh_file": mesh_file_name,
+        }
     )
-    # All of these should be in a config file somewhere
-    fab.env.neso_mesh_file = mesh_file_name
-
-    fab.job(dict(script="neso"), args)
 
 
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso_ensemble(
-    config,
-    solver="Electrostatic2D3V",
-    conditions_file_name="two_stream_conditions.xml",
-    mesh_file_name="two_stream_mesh.xml",
-    **args
+    config: str,
+    solver: str = "Electrostatic2D3V",
+    conditions_file_name: str = "conditions.xml",
+    mesh_file_name: str = "mesh.xml",
 ):
     """
-    Run NESO ensemble
+    Run ensemble of NESO solver instances.
 
-    parameters:
-      - config: Directory containing SWEEP configurations
-      - solver: Which NESO solver to use
-      - conditions_file_name: Path to conditions file
-      - mesh_file_name: Path to mesh file for NESO
+    Args:
+        config: Directory with ensemble configuration information.
+        solver: Which NESO solver to use.
+        conditions_file_name: Name of conditions XML file in configuration directory.
+        mesh_file_name: Name of mesh XML in configuration directory.
     """
     path_to_config = fab.find_config_file_path(config)
-    sweep_dir = str((Path(path_to_config) / "SWEEP"))
-    fab.env.script = "neso"
-
-    fab.env.neso_solver = solver
-    fab.env.neso_conditions_file = conditions_file_name
-    fab.env.neso_mesh_file = mesh_file_name
-
+    sweep_dir = str(Path(path_to_config) / "SWEEP")
+    fab.update_environment(
+        {
+            "script": "neso",
+            "neso_solver": solver,
+            "neso_conditions_file": conditions_file_name,
+            "neso_mesh_file": mesh_file_name,
+        }
+    )
     fab.with_config(config)
-    fab.run_ensemble(config, sweep_dir, **args)
+    fab.run_ensemble(config, sweep_dir)
