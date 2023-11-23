@@ -12,11 +12,11 @@ except ImportError:
     import base.fab as fab
 
 
-fab.add_local_paths("FabNeso")
+fab.add_local_paths("FabNESO")
 
 
 @fab.task
-@fab.load_plugin_env_vars("FabNeso")
+@fab.load_plugin_env_vars("FabNESO")
 def neso(
     config,
     solver="Electrostatic2D3V",
@@ -52,7 +52,7 @@ def neso(
 
 
 @fab.task
-@fab.load_plugin_env_vars("FabNeso")
+@fab.load_plugin_env_vars("FabNESO")
 def neso_ensemble(
     config,
     solver="Electrostatic2D3V",

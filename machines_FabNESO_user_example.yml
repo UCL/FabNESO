@@ -1,4 +1,4 @@
-# This is the user personal configuration for job submission and execution for FabNeso plugin
+# This is the user personal configuration for job submission and execution for FabNESO plugin
 # All given variables here will be override machine settings loaded from (a) FabSim3/deploy/machines.yml and (b) FabSim3/deploy/machines_user.yml
 #
 # Here, you can find some examples for pre-defined remote machines
