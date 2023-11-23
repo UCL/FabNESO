@@ -27,10 +27,7 @@ def create_dir_tree(
         print("No correct copy dir found, just creating the tree for now!")
 
     # Make the base directory
-    try:
-        make_directory(sweep_path, destructive)
-    except FileExistsError:
-        return
+    make_directory(sweep_path, destructive)
 
     # Set the initial value of the scanned parameter to the lower limit
     para_val = scan_range[0]
@@ -44,8 +41,14 @@ def create_dir_tree(
             copy_dir_contents(new_dir, copy_dir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
-        if os.path.isfile(new_dir + edit_file) and parameter_to_scan:
-            edit_parameter(new_dir + edit_file, parameter_to_scan, para_val)
+        msg = ""
+        if not (new_dir / edit_file).is_file():
+            msg = f"{new_dir / edit_file} does not exist"
+            raise FileNotFoundError(msg)
+        if parameter_to_scan is None:
+            msg = "parameter_to_scan not defined"
+            raise TypeError(msg)
+        edit_parameter(new_dir / edit_file, parameter_to_scan, para_val)
         # iterate para_val
         para_val += (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
 
