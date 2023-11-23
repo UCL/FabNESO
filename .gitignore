@@ -24,6 +24,11 @@ __pycache__/
 # C extensions
 *.so
 
+# FabSim and NESO output files
+*.chk
+*.opt
+*.fld
+
 # Distribution / packaging
 .Python
 build/
@@ -202,5 +207,9 @@ pyrightconfig.json
 # Ignore all local history of files
 .history
 .ionide
+
+#EMACS autosaves
+*\#*\#
+*~
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,jupyternotebooks

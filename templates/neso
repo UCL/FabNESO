@@ -1,0 +1,10 @@
+
+cd $job_results
+$run_prefix
+
+
+echo "Running NESO solver $neso_solver"
+
+echo ${neso_bin_dir}$neso_solver $neso_conditions_file $neso_mesh_file
+
+${neso_bin_dir}$neso_solver $neso_conditions_file $neso_mesh_file
