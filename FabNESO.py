@@ -34,14 +34,21 @@ def neso(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
-        **kwargs: Additional kwargs will be passed to ensemble_tools.edit_parameters to create a temporary conditions file with these overriden parameters
+        **kwargs: Additional kwargs will be passed to ensemble_tools.edit_parameters to
+                  create a temporary conditions file with these overriden parameters
     """
-    # If there have been additional parameters provided, create a copy of the conditions file and edit the input parameters
+    # If there have been additional parameters provided, create a copy of the
+    # conditions file and edit the input parameters
     if not kwargs == {}:
-        shutil.copytree(fab.find_config_file_path(config),Path(fab.find_config_file_path(config)).parent / "tmp_configs")
-        config = "tmp_configs" #switch our config to the new tmp ones
-        edit_parameters(Path(fab.find_config_file_path(config)) / conditions_file_name, kwargs)
-            
+        shutil.copytree(
+            fab.find_config_file_path(config),
+            Path(fab.find_config_file_path(config)).parent / "tmp_configs",
+        )
+        config = "tmp_configs"  # switch our config to the new tmp ones
+        edit_parameters(
+            Path(fab.find_config_file_path(config)) / conditions_file_name, kwargs
+        )
+
     fab.with_config(config)
     fab.execute(fab.put_configs, config)
     fab.job(
