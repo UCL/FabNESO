@@ -90,7 +90,7 @@ fabsim localhost fetch_results
 
 #### Running an ensemble of simulations
 
-The FabSIM `neso_ensemble` task runs a series of FabSIM jobs taking a `SWEEP' directory as its primary input.
+The FabSIM `neso_ensemble` task runs a series of FabSIM jobs taking a `SWEEP` directory as its primary input.
 This `SWEEP` directory contains any number of subdirectories, each containing a conditions and mesh file for individual NESO jobs.
 
 A utility script [`utils/make_sweep_dir.py`](https://github.com/UCL/FabNESO/blob/main/utils/make_sweep_dir.py) is provided to automatically build this sweep directory and encode the input conditions files with templated parameters selected by the user.
