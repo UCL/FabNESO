@@ -4,7 +4,7 @@
 [![Linting](https://github.com/UCL/fabneso/actions/workflows/linting.yml/badge.svg)](https://github.com/UCL/fabneso/actions/workflows/linting.yml)
 [![Licence](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](./LICENCE)
 
-[Neptune Exploratory SOftware (NESO)](https://github.com/ExCALIBUR-NEPTUNE/NESO) plug-in
+[Neptune Exploratory SOftware (NESO)](https://github.com/ExCALIBUR-NEPTUNE/NESO) plugin
 for [FabSim3](https://github.com/djgroen/FabSim3), facilitating execution of NESO
 simulations on both local and remote high performance computing systems via a unified
 interface.
@@ -36,22 +36,13 @@ You will need [FabSim3 to be installed](https://fabsim3.readthedocs.io/en/latest
 
 ### Installation
 
-**Until the plugin is upstreamed to FabSIM properly, this first step is required:**
-
-Edit the file ` $FABSIM3_HOME/fabsim/deploy/plugins.yaml` to include the FabNESO plugin by including the following lines:
-
-```
-FabNESO:
-  repository: https://github.com/UCL/FabNESO.git
-```
-
-FabSIM can then automatically install the plugin by calling:
+The plugin can be installed locally with FabSim3 by running:
 
 ```
 fabsim localhost install_plugin:FabNESO
 ```
 
-Before the code can be run, a file `machines_FabNESO_user.yml` must be created in the plugin's directory containing the paths to NESO installations on each system that will be used for running.
+Before the code can be run, a file `machines_FabNESO_user.yml` must be created in the plugin's directory (`$FABSIM3_HOME/plugins/FabNESO/`) containing the paths to the built NESO binaries on each system that will be used for running.
 An example file `machines_FabNESO_user_example.yml` is provided to use as a template.
 
 ### Running simulations locally
