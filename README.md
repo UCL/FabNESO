@@ -72,9 +72,9 @@ The first positional argument after `neso:` specifies the directory within `conf
 
 Additional arguments that can be given the to the `neso` task are:
 
-- `solver` : chose which NESO solver to run. Default = `Electrostatic2D3V`,
-- `conditions_file_name` : Name of conditions XML file in configuration directory. Default = `conditions.xml`,
-- `mesh_file_name` : Name of mesh XML in configuration directory. Default = `mesh.xml`
+- `solver` : chose which NESO solver to run (default = `Electrostatic2D3V`),
+- `conditions_file_name` : Name of conditions XML file in configuration directory (default = `conditions.xml`),
+- `mesh_file_name` : Name of mesh XML file in configuration directory (default = `mesh.xml`).
 
 To run the H3LAPD solver with [the `2Din3D-hw` example configuration](https://github.com/ExCALIBUR-NEPTUNE/NESO/tree/main/examples/H3LAPD/2Din3D-hw), for example, the following command should be run:
 
@@ -135,9 +135,9 @@ fabsim localhost neso_ensemble:two_stream_ensemble
 
 `neso_ensemble` takes the additional input parameters:
 
-- `solver` : chose which NESO solver to run. Default = `Electrostatic2D3V`,
-- `conditions_file_name` : Name of conditions XML file in SWEEP directories. Default = `conditions.xml`,
-- `mesh_file_name` : Name of mesh XML file in the SWEEP directories. Default = `mesh.xml`
+- `solver` : chose which NESO solver to run (default = `Electrostatic2D3V`),
+- `conditions_file_name` : Name of conditions XML file in SWEEP directories (default = `conditions.xml`),
+- `mesh_file_name` : Name of mesh XML file in the SWEEP directories (default = `mesh.xml`).
 
 The results of the jobs are recovered using the same fetch command:
 
