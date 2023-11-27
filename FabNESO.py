@@ -40,7 +40,7 @@ def neso(
         **kwargs: Additional kwargs will be passed to ensemble_tools.edit_parameters to
                   create a temporary conditions file with these overriden parameters
     """
-    # Use a temporary directory context so that we can handle parsameter inputs
+    # Use a temporary directory context so that we can handle parameter inputs
     # from the command line
     original_config_path = Path(fab.find_config_file_path(config))
     temporary_context: Union[TemporaryDirectory, nullcontext] = (
