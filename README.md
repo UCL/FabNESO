@@ -32,38 +32,40 @@ Centre for Advanced Research Computing, University College London ([arc.collabor
 
 You will need [FabSim3 to be installed](https://fabsim3.readthedocs.io/en/latest/installation/) on the machine you will use to dispatch simulation runs from.
 
-NESO must be installed on the destination machine that will run the simulation.
+[NESO must be installed](https://github.com/ExCALIBUR-NEPTUNE/NESO#building-with-spack) on the destination machine that will run the simulation.
 
 ### Installation
 
 **Until the plugin is upstreamed to FabSIM properly, this first step is required:**
 
-Edit the file ` $FABSIM3_HOME/fabsim/deplot/plugins.yaml` to include the FabNESO plugin by including the following lines:
+Edit the file ` $FABSIM3_HOME/fabsim/deploy/plugins.yaml` to include the FabNESO plugin by including the following lines:
 
 ```
 FabNESO:
-  repository: https://github.com/UCL/fabneso.git
+  repository: https://github.com/UCL/FabNESO.git
 ```
 
 FabSIM can then automatically install the plugin by calling:
 
-`fabsim localhost install_plugin:FabNESO`
+```
+fabsim localhost install_plugin:FabNESO
+```
 
 Before the code can be run, a file `machines_FabNESO_user.yml` must be created in the plugin's directory containing the paths to NESO installations on each system that will be used for running.
 An example file `machines_FabNESO_user_example.yml` is provided to use as a template.
 
 ### Running simulations locally
 
-NESO runs by calling the desired solver with a `conditions` and `mesh` file that define the parameters of the simulation.
-Examples of these configuration files are provided in the `config_files/two_stream/` (intended for use with NESO's Electrostatic2D3V solver) and `config_files/2Din3D-hw/` (for use with the H3LAPD solver) directories.
+NESO runs by calling the desired solver with a conditions and mesh XML files that define the parameters of the simulation and geometry of the simulation domain respectively.
+Examples of these configuration files are provided in the directories `config_files/two_stream/` (intended for use with NESO's `Electrostatic2D3V` solver) and `config_files/2Din3D-hw/` (for use with the `H3LAPD` solver).
 
 #### Running a single simulation
 
-The FabSIM [`neso`](https://github.com/UCL/fabneso/blob/89bba5ca73c333cf16e8b8dddee164a67b1eb867/FabNESO.py#L20) task runs a single simulation on the machine of your chosing.
-To run NESO locally using the two_stream example, run the following command:
+The FabSIM `neso` task runs a single simulation on the machine of your chosing.
+To run NESO locally using the `Electrostatic2D3V` solver with [the `two_stream` example](https://github.com/ExCALIBUR-NEPTUNE/NESO/tree/main/examples/Electrostatic2D3V/two_stream), run the following command:
 
 ```
-fabsim localhost neso:two_steam
+fabsim localhost neso:two_stream
 ```
 
 The first positional argument after `neso:` specifies the directory within `config_files` that holds the conditions and mesh files to be used.
@@ -74,7 +76,7 @@ Additional arguments that can be given the to the `neso` task are:
 - `conditions_file_name` : Name of conditions XML file in configuration directory. Default = `conditions.xml`,
 - `mesh_file_name` : Name of mesh XML in configuration directory. Default = `mesh.xml`
 
-To run the H3LAPD solver with the example configurations, for example, the following command should be run:
+To run the H3LAPD solver with [the `2Din3D-hw` example configuration](https://github.com/ExCALIBUR-NEPTUNE/NESO/tree/main/examples/H3LAPD/2Din3D-hw), for example, the following command should be run:
 
 ```
 fabsim localhost neso:2Din3D-hw,solver=H3LAPD
@@ -88,10 +90,10 @@ fabsim localhost fetch_results
 
 #### Running an ensemble of simulations
 
-The FabSIM [`neso_ensemble`](https://github.com/UCL/fabneso/blob/89bba5ca73c333cf16e8b8dddee164a67b1eb867/FabNESO.py#L49) task runs a series of FabSIM jobs taking a `SWEEP' directory as its primary input.
-This SWEEP directory contains any number of subdirectories, each containing a conditions and mesh file for individual NESO jobs.
+The FabSIM `neso_ensemble` task runs a series of FabSIM jobs taking a `SWEEP' directory as its primary input.
+This `SWEEP` directory contains any number of subdirectories, each containing a conditions and mesh file for individual NESO jobs.
 
-A utility script [utils/make_sweep_dir.py](https://github.com/UCL/FabNESO/blob/main/utils/make_sweep_dir.py) is provided to automatically build this sweep directory and encode the input conditions files with templated parameters selected by the user.
+A utility script [`utils/make_sweep_dir.py`](https://github.com/UCL/FabNESO/blob/main/utils/make_sweep_dir.py) is provided to automatically build this sweep directory and encode the input conditions files with templated parameters selected by the user.
 
 `make_sweep_dir.py` takes the following input parameters:
 
@@ -115,7 +117,7 @@ python3 make_sweep_dir.py --para_to_template="particle_initial_velocity" --scan_
 
 The script can also template an arbitrary number of parameters in the conditions file using the following command line argument:
 
-- `--parameter_dict` : A python dict of the parameters to be scanned, with associated minimum and maximum values as a list (default = `""`)
+- `--parameter_dict` : A Python dict of the parameters to be scanned, with associated minimum and maximum values as a list (default = `""`)
 
 To template both the above `particle_initial_velocity` and the `particle_charge_density` of the simulation between 102 and 109, run the following command:
 
@@ -135,7 +137,7 @@ fabsim localhost neso_ensemble:two_stream_ensemble
 
 - `solver` : chose which NESO solver to run. Default = `Electrostatic2D3V`,
 - `conditions_file_name` : Name of conditions XML file in SWEEP directories. Default = `conditions.xml`,
-- `mesh_file_name` : Name of mesh XML in the SWEEP directories. Default = `mesh.xml`
+- `mesh_file_name` : Name of mesh XML file in the SWEEP directories. Default = `mesh.xml`
 
 The results of the jobs are recovered using the same fetch command:
 
