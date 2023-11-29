@@ -67,6 +67,12 @@ Additional arguments that can be given the to the `neso` task are:
 - `conditions_file_name` : Name of conditions XML file in configuration directory (default = `conditions.xml`),
 - `mesh_file_name` : Name of mesh XML file in configuration directory (default = `mesh.xml`).
 
+Any additional keyword arguments to the task will be used to override the value of parameters in the conditions file. For example to run the `two_stream` example with the `Electorstatic2D3V` solver, with the `num_particles_total` parameter overridden to be 10000 run
+
+```
+fabsim localhost neso:two_stream,num_particles_total=10000
+```
+
 To run the H3LAPD solver with [the `2Din3D-hw` example configuration](https://github.com/ExCALIBUR-NEPTUNE/NESO/tree/main/examples/H3LAPD/2Din3D-hw), for example, the following command should be run:
 
 ```
@@ -84,9 +90,9 @@ fabsim localhost fetch_results
 The FabSIM `neso_ensemble` task runs a series of FabSIM jobs taking a `SWEEP` directory as its primary input.
 This `SWEEP` directory contains any number of subdirectories, each containing a conditions and mesh file for individual NESO jobs.
 
-A utility script [`utils/make_sweep_dir.py`](https://github.com/UCL/FabNESO/blob/main/utils/make_sweep_dir.py) is provided to automatically build this sweep directory and encode the input conditions files with templated parameters selected by the user.
+A utility script [`FabNESO/make_sweep_dir.py`](https://github.com/UCL/FabNESO/blob/main/FabNESO/make_sweep_dir.py) is provided to automatically build this sweep directory and encode the input conditions files with templated parameters selected by the user. It should be executed as `python -m FabNESO.make_sweep_dir`.
 
-`make_sweep_dir.py` takes the following input parameters:
+The script takes the following input parameters (see also output of passing `--help` option):
 
 - `--sweep_path` : a path that will act as the SWEEP directory (default = `$FABSIM3_HOME/plugins/FabNESO/config_files/two_stream_ensemble`),
 - `--n_divs` : Number of divisions in grid for each parameter (default = `5`),
@@ -103,7 +109,7 @@ To template a single parameter, the following three command line arguments shoul
 An example use to template the `particle_initial_velocity` parameter for 4 values between 0.1 and 2.0 using the the two_stream example files would therefore be:
 
 ```
-python3 make_sweep_dir.py --para_to_template="particle_initial_velocity" --scan_min=0.1 --scan_max=2.0 --n_divs=4
+python -m FabNESO.make_sweep_dir --para_to_template="particle_initial_velocity" --scan_min=0.1 --scan_max=2.0 --n_divs=4
 ```
 
 The script can also template an arbitrary number of parameters in the conditions file using the following command line argument:
@@ -113,7 +119,7 @@ The script can also template an arbitrary number of parameters in the conditions
 To template both the above `particle_initial_velocity` and the `particle_charge_density` of the simulation between 102 and 109, run the following command:
 
 ```
-python3 make_sweep_dir.py --parameter_dict="{'particle_initial_velocity': [0.1,2.0], 'particle_charge_density': [102,109]}" --n_divs=4
+python -m FabNESO.make_sweep_dir --parameter_dict="{'particle_initial_velocity': [0.1,2.0], 'particle_charge_density': [102,109]}" --n_divs=4
 ```
 
 This will create 16 directories in the `config_files/two_stream_ensemble` for the combination of these scans.
