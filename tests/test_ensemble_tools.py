@@ -1,21 +1,20 @@
-""" Test the utility scripts """
+"""Test the utility scripts."""
 
+import itertools
+import re
 import shutil
 from pathlib import Path
-import xml.etree.ElementTree as ET
-import re
-import itertools
 
 import pytest
+from defusedxml import ElementTree
+from py.path import local
 
 # from plugins.FabNESO.utils.make_sweep_dir
-# from ensemble_tools import edit_parameters
-from utils.ensemble_tools import edit_parameters, create_dir_tree, create_dict_sweep
+from FabNESO.ensemble_tools import create_dict_sweep, create_dir_tree, edit_parameters
 
 
-def test_edit_parameters(tmpdir):
-    """Test the edit_parameters method"""
-
+def test_edit_parameters(tmpdir: local) -> None:
+    """Test the edit_parameters method."""
     parameter_to_test = "particle_initial_velocity"
     parameter_test_value = 10.0
     temp_conditions_path = Path(tmpdir) / "conditions.xml"
@@ -30,10 +29,11 @@ def test_edit_parameters(tmpdir):
     )
 
 
-def check_parameter_in_conditions(conditions_file_name, parameter_name, expected_value):
-    """Returns True if parameter_pattern is found in the PARAMETERS secion"""
-    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-    data = ET.parse(conditions_file_name, parser=parser)
+def check_parameter_in_conditions(
+    conditions_file_name: Path, parameter_name: str, expected_value: float
+) -> bool:
+    """Return True if parameter_pattern is found in the PARAMETERS section."""
+    data = ElementTree.parse(conditions_file_name)
     root = data.getroot()
     conditions = root.find("CONDITIONS")
     if conditions is None:
@@ -63,9 +63,8 @@ def check_parameter_in_conditions(conditions_file_name, parameter_name, expected
     raise ValueError(msg)
 
 
-def test_create_dir_tree(tmpdir):
-    """Test the create_dir_tree() method"""
-
+def test_create_dir_tree(tmpdir: local) -> None:
+    """Test the create_dir_tree() method."""
     test_sweep_dir = Path(tmpdir) / "test_sweep"
     n_dirs = 5
     destructive = True
@@ -76,14 +75,14 @@ def test_create_dir_tree(tmpdir):
     outdir_prefix = "asd"
 
     create_dir_tree(
-        test_sweep_dir,
-        n_dirs,
-        destructive,
-        copy_dir,
-        edit_file,
-        parameter_to_scan,
-        scan_range,
-        outdir_prefix,
+        sweep_path=test_sweep_dir,
+        n_dirs=n_dirs,
+        destructive=destructive,
+        copy_dir=copy_dir,
+        edit_file=edit_file,
+        parameter_to_scan=parameter_to_scan,
+        scan_range=scan_range,
+        outdir_prefix=outdir_prefix,
     )
 
     assert (test_sweep_dir / "SWEEP").is_dir()
@@ -97,32 +96,39 @@ def test_create_dir_tree(tmpdir):
         assert check_parameter_in_conditions(cond_file, parameter_to_scan, para_value)
     # Should raise an exception when trying to edit the mesh file
     edit_file = "mesh.xml"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".* a CONDITIONS node.*"):
         create_dir_tree(
-            test_sweep_dir,
-            n_dirs,
-            destructive,
-            copy_dir,
-            edit_file,
-            parameter_to_scan,
-            scan_range,
-            outdir_prefix,
+            sweep_path=test_sweep_dir,
+            n_dirs=n_dirs,
+            destructive=destructive,
+            copy_dir=copy_dir,
+            edit_file=edit_file,
+            parameter_to_scan=parameter_to_scan,
+            scan_range=scan_range,
+            outdir_prefix=outdir_prefix,
         )
 
 
-def test_create_dict_sweep(tmpdir):
-    """Test the create_dict_sweep method of utils/ensemble_tools.py"""
+def test_create_dict_sweep(tmpdir: local) -> None:
+    """Test the create_dict_sweep method of utils/ensemble_tools.py."""
     sweep_path = Path(tmpdir) / "test"
     n_divs = 5
     destructive = True
     copy_dir = Path("config_files") / "two_stream"
     edit_file = "conditions.xml"
+    particle_init_range: tuple[float, float] = (0.1, 2.5)
+    particle_charge_range: tuple[float, float] = (102.0, 108.0)
     parameter_dict = {
-        "particle_initial_velocity": [0.1, 0.9],
-        "particle_charge_density": [102, 108],
+        "particle_initial_velocity": particle_init_range,
+        "particle_charge_density": particle_charge_range,
     }
     create_dict_sweep(
-        sweep_path, n_divs, destructive, copy_dir, edit_file, parameter_dict
+        sweep_path=sweep_path,
+        n_divs=n_divs,
+        destructive=destructive,
+        copy_dir=copy_dir,
+        edit_file=edit_file,
+        parameter_dict=parameter_dict,
     )
     n_total_directories = n_divs ** len(parameter_dict)
     # Check we make the corect number of directories
@@ -130,7 +136,9 @@ def test_create_dict_sweep(tmpdir):
 
     # Loop through the directories and check the conditions file
     for indices in itertools.product(*(range(n_divs),) * len(parameter_dict)):
-        directory_name = "-".join(f"{k}_{i}" for k, i in zip(parameter_dict, indices))
+        directory_name = "-".join(
+            f"{k}_{i}" for k, i in zip(parameter_dict, indices, strict=True)
+        )
         this_dir = sweep_path / "SWEEP" / directory_name
 
         # Check the directory exists
@@ -150,7 +158,7 @@ def test_create_dict_sweep(tmpdir):
             assert check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
             )
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError, match=r".*CONDITIONS.*"):
                 # The mesh file should be not edited
                 assert check_parameter_in_conditions(
                     this_dir / "mesh.xml", parameter, para_value
