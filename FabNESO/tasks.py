@@ -4,10 +4,9 @@ Task definitions for FabNESO plug-in to FabSIM software toolkit.
 Defines tasks for running simulations using Neptune Exploratory Software (NESO).
 """
 
-from pathlib import Path
-from plugins.FabNESO.utils.ensemble_tools import edit_parameters
 import shutil
 from contextlib import nullcontext
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Union
 
@@ -16,6 +15,8 @@ try:
 except ImportError:
     import base.fab as fab  # type: ignore
 
+
+from .ensemble_tools import edit_parameters
 
 fab.add_local_paths("FabNESO")
 

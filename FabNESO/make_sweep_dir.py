@@ -1,10 +1,10 @@
 """ Makes a sweep directory for FabNESO."""
 
-from ensemble_tools import create_dir_tree, create_dict_sweep
-
 import argparse
 from ast import literal_eval
 from pathlib import Path
+
+from .ensemble_tools import create_dict_sweep, create_dir_tree
 
 
 def main():
