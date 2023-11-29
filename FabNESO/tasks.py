@@ -8,12 +8,11 @@ import shutil
 from contextlib import nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Union
 
 try:
-    import fabsim.base.fab as fab
+    from fabsim.base import fab
 except ImportError:
-    import base.fab as fab  # type: ignore
+    from base import fab  # type: ignore
 
 
 from .ensemble_tools import edit_parameters
@@ -44,15 +43,15 @@ def neso(
     # Use a temporary directory context so that we can handle parameter inputs
     # from the command line
     original_config_path = Path(fab.find_config_file_path(config))
-    temporary_context: Union[TemporaryDirectory, nullcontext] = (
+    temporary_context: TemporaryDirectory | nullcontext = (
         TemporaryDirectory(prefix=f"{config}_", dir=original_config_path.parent)
-        if not kwargs == {}
+        if kwargs != {}
         else nullcontext()
     )
     with temporary_context as temporary_config_directory:
         # If there have been additional parameters provided, create a copy of the
         # conditions file and edit the input parameters
-        if not kwargs == {}:
+        if kwargs != {}:
             temporary_config_path = Path(temporary_config_directory)
             shutil.copytree(
                 original_config_path, temporary_config_path, dirs_exist_ok=True

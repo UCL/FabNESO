@@ -1,4 +1,4 @@
-""" Makes a sweep directory for FabNESO."""
+"""Makes a sweep directory for FabNESO."""
 
 import argparse
 from ast import literal_eval
@@ -67,7 +67,8 @@ def main():
         parameter_dict = literal_eval(args.parameter_dict)
         # Check we have made a dict
         if not isinstance(parameter_dict, dict):
-            raise ValueError("Did not receive a dict as input for parameter_dict")
+            msg = "Did not receive a dict as input for parameter_dict"
+            raise ValueError(msg)
         # Use the dict to create a sweep directory
         create_dict_sweep(
             sweep_path=args.sweep_path,

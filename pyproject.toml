@@ -67,7 +67,7 @@ testpaths = [
 fix = true
 force-exclude = true
 ignore = [
-    "COM812", #  trailing commas (ruff-format recommended)
+    "COM812", # trailing commas (ruff-format recommended)
     "D203", # no-blank-line-before-class
     "D212", # multi-line-summary-first-line
     "D407", # removed dashes lines under sections
@@ -79,7 +79,7 @@ per-file-ignores = {"tests*" = [
     "S101",
 ]}
 select = [
-    "ALL"
+    "ALL",
 ]
 target-version = "py310"
 isort.known-first-party = [

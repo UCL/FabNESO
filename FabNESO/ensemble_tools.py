@@ -1,17 +1,17 @@
-""" A module to create input directories and encode configurations for FabNESO."""
+"""A module to create input directories and encode configurations for FabNESO."""
 
 from __future__ import annotations
 
-import os
-import shutil
 import itertools
+import os
 import re
+import shutil
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import TYPE_CHECKING
-import xml.etree.ElementTree as ET
 
 if TYPE_CHECKING:
-    from typing import Iterator
+    from collections.abc import Iterator
 
 
 def create_dir_tree(
@@ -24,8 +24,7 @@ def create_dir_tree(
     scan_range: tuple[float, float],
     outdir_prefix: str,
 ):
-    """Create a directory tree in the sweep_path"""
-
+    """Create a directory tree in the sweep_path."""
     copy_dir = Path(copy_dir)
     if not copy_dir.is_dir():
         msg = f"copy_dir {copy_dir} does not exist"
