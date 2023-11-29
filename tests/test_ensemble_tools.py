@@ -116,11 +116,9 @@ def test_create_dict_sweep(tmpdir: local) -> None:
     destructive = True
     copy_dir = Path("config_files") / "two_stream"
     edit_file = "conditions.xml"
-    particle_init_range: tuple[float, float] = (0.1, 2.5)
-    particle_charge_range: tuple[float, float] = (102.0, 108.0)
     parameter_dict = {
-        "particle_initial_velocity": particle_init_range,
-        "particle_charge_density": particle_charge_range,
+        "particle_initial_velocity": (0.1, 2.5),
+        "particle_charge_density": (102.0, 108.0),
     }
     create_dict_sweep(
         sweep_path=sweep_path,
