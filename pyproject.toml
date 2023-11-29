@@ -92,6 +92,9 @@ pep8-naming.classmethod-decorators = [
 ]
 pylint.max-args = 10
 
+[tool.setuptools]
+packages = ["FabNESO"]
+
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
 write_to = "FabNESO/_version.py"
