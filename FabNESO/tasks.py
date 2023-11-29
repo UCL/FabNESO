@@ -27,7 +27,7 @@ def neso(
     solver: str = "Electrostatic2D3V",
     conditions_file_name: str = "conditions.xml",
     mesh_file_name: str = "mesh.xml",
-    **parameter_overrides: float,
+    **parameter_overrides: str,
 ) -> None:
     """
     Run a single NESO solver instance.

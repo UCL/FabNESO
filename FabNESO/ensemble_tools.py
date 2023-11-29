@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Mapping
 
 
 def create_dir_tree(
@@ -98,7 +98,7 @@ def create_dict_sweep(
 
 
 def edit_parameters(
-    conditions_file: Path, parameter_overrides: dict[str, float]
+    conditions_file: Path, parameter_overrides: Mapping[str, float | str]
 ) -> None:
     """Edit parameters in the configuration file to the desired value."""
     parser = ElementTree.XMLParser(  # noqa: S314
