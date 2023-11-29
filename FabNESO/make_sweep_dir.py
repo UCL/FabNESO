@@ -1,13 +1,14 @@
-""" Makes a sweep directory for FabNESO."""
-
-from ensemble_tools import create_dir_tree, create_dict_sweep
+"""Makes a sweep directory for FabNESO."""
 
 import argparse
 from ast import literal_eval
 from pathlib import Path
 
+from .ensemble_tools import create_dict_sweep, create_dir_tree
 
-def main():
+
+def main() -> None:
+    """Entrypoint for script to make sweep directory."""
     # Make the argument parser
     parser = argparse.ArgumentParser(
         description="Makes a sweep directory for FabNESO",
@@ -67,7 +68,8 @@ def main():
         parameter_dict = literal_eval(args.parameter_dict)
         # Check we have made a dict
         if not isinstance(parameter_dict, dict):
-            raise ValueError("Did not receive a dict as input for parameter_dict")
+            msg = "Did not receive a dict as input for parameter_dict"
+            raise ValueError(msg)
         # Use the dict to create a sweep directory
         create_dict_sweep(
             sweep_path=args.sweep_path,
