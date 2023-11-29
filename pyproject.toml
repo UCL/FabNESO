@@ -73,6 +73,7 @@ ignore = [
     "D407", # removed dashes lines under sections
     "D417", # argument description in docstring (unreliable)
     "ISC001", # simplify implicit str concatenation (ruff-format recommended)
+    "N999", # invalid-module-name - follow FabSim3 convention of CamelCase plugin names
 ]
 per-file-ignores = {"tests*" = [
     "INP001",
@@ -89,6 +90,7 @@ mccabe.max-complexity = 18
 pep8-naming.classmethod-decorators = [
     "classmethod",
 ]
+pylint.max-args = 10
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"

@@ -7,7 +7,8 @@ from pathlib import Path
 from .ensemble_tools import create_dict_sweep, create_dir_tree
 
 
-def main():
+def main() -> None:
+    """Entrypoint for script to make sweep directory."""
     # Make the argument parser
     parser = argparse.ArgumentParser(
         description="Makes a sweep directory for FabNESO",

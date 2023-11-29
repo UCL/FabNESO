@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import itertools
-import os
 import re
 import shutil
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import TYPE_CHECKING
+from xml.etree import ElementTree
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
 def create_dir_tree(
+    *,
     sweep_path: Path,
     n_dirs: int,
     destructive: bool,
@@ -23,7 +23,7 @@ def create_dir_tree(
     parameter_to_scan: str,
     scan_range: tuple[float, float],
     outdir_prefix: str,
-):
+) -> None:
     """Create a directory tree in the sweep_path."""
     copy_dir = Path(copy_dir)
     if not copy_dir.is_dir():
@@ -37,13 +37,13 @@ def create_dir_tree(
         raise TypeError(msg)
 
     # Make the base directory
-    if os.path.isdir(sweep_path):
+    if sweep_path.is_dir():
         if destructive:
             shutil.rmtree(sweep_path)
         else:
             msg = "Path already exists and not in destructive mode"
             raise FileExistsError(msg)
-    os.makedirs(sweep_path)
+    sweep_path.mkdir(parents=True)
 
     # Set the initial value of the scanned parameter to the lower limit
     para_val = scan_range[0]
@@ -62,20 +62,21 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
     """Compute a Cartesian product of a dictionary of iterables."""
     keys = input_dict.keys()
     for values in itertools.product(*input_dict.values()):
-        yield dict(zip(keys, values))
+        yield dict(zip(keys, values, strict=True))
 
 
 def create_dict_sweep(
+    *,
     sweep_path: Path,
     n_divs: int,
     destructive: bool,
     copy_dir: Path,
     edit_file: str,
     parameter_dict: dict[str, tuple[float, float]],
-):
+) -> None:
     """Use a dictionary with each parameter interval to create a sweep directory."""
     # If destructive, delete the whole tree if it already exists
-    if destructive and os.path.isdir(sweep_path):
+    if destructive and sweep_path.is_dir():
         shutil.rmtree(sweep_path)
     # Uniformly spaced grids on [low, high] for each parameter
     parameter_grids = {
@@ -86,17 +87,24 @@ def create_dict_sweep(
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
         itertools.product(*(range(n_divs),) * len(parameter_dict)),
+        strict=True,
     ):
-        directory_name = "-".join(f"{k}_{i}" for k, i in zip(parameter_values, indices))
+        directory_name = "-".join(
+            f"{k}_{i}" for k, i in zip(parameter_values, indices, strict=True)
+        )
         directory_path = Path(sweep_path) / "SWEEP" / directory_name
         shutil.copytree(copy_dir, directory_path)
         edit_parameters(directory_path / edit_file, parameter_values)
 
 
-def edit_parameters(conditions_file: Path, parameter_overrides: dict[str, float]):
+def edit_parameters(
+    conditions_file: Path, parameter_overrides: dict[str, float]
+) -> None:
     """Edit parameters in the configuration file to the desired value."""
-    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-    data = ET.parse(conditions_file, parser=parser)
+    parser = ElementTree.XMLParser(  # noqa: S314
+        target=ElementTree.TreeBuilder(insert_comments=True)
+    )
+    data = ElementTree.parse(conditions_file, parser=parser)  # noqa: S314
     root = data.getroot()
     conditions = root.find("CONDITIONS")
     if conditions is None:

@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 try:
     from fabsim.base import fab
 except ImportError:
-    from base import fab  # type: ignore
+    from base import fab
 
 
 from .ensemble_tools import edit_parameters
@@ -27,8 +27,8 @@ def neso(
     solver: str = "Electrostatic2D3V",
     conditions_file_name: str = "conditions.xml",
     mesh_file_name: str = "mesh.xml",
-    **kwargs,
-):
+    **parameter_overrides: float,
+) -> None:
     """
     Run a single NESO solver instance.
 
@@ -37,27 +37,30 @@ def neso(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
-        **kwargs: Additional kwargs will be passed to ensemble_tools.edit_parameters to
-                  create a temporary conditions file with these overriden parameters
+        **parameter_overrides: Additional keyword arguments will be passed to
+            ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions
+            file with these parameter vaues overriden.
     """
     # Use a temporary directory context so that we can handle parameter inputs
     # from the command line
     original_config_path = Path(fab.find_config_file_path(config))
     temporary_context: TemporaryDirectory | nullcontext = (
         TemporaryDirectory(prefix=f"{config}_", dir=original_config_path.parent)
-        if kwargs != {}
+        if parameter_overrides != {}
         else nullcontext()
     )
     with temporary_context as temporary_config_directory:
         # If there have been additional parameters provided, create a copy of the
         # conditions file and edit the input parameters
-        if kwargs != {}:
+        if parameter_overrides != {}:
             temporary_config_path = Path(temporary_config_directory)
             shutil.copytree(
                 original_config_path, temporary_config_path, dirs_exist_ok=True
             )
             config = temporary_config_path.name  # switch our config to the new tmp ones
-            edit_parameters(temporary_config_path / conditions_file_name, kwargs)
+            edit_parameters(
+                temporary_config_path / conditions_file_name, parameter_overrides
+            )
 
         fab.with_config(config)
         fab.execute(fab.put_configs, config)
@@ -78,7 +81,7 @@ def neso_ensemble(
     solver: str = "Electrostatic2D3V",
     conditions_file_name: str = "conditions.xml",
     mesh_file_name: str = "mesh.xml",
-):
+) -> None:
     """
     Run ensemble of NESO solver instances.
 
