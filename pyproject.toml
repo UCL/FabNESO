@@ -19,6 +19,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "defusedxml",
 ]
 description = "Neptune Exploratory SOftware (NESO) plugin for FabSim3"
 dynamic = [
