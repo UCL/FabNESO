@@ -24,12 +24,12 @@ def test_edit_parameters(tmpdir: local) -> None:
 
     edit_parameters(temp_conditions_path, {parameter_to_test: parameter_test_value})
 
-    assert check_parameter_in_conditions(
+    assert _check_parameter_in_conditions(
         temp_conditions_path, parameter_to_test, parameter_test_value
     )
 
 
-def check_parameter_in_conditions(
+def _check_parameter_in_conditions(
     conditions_file_name: Path, parameter_name: str, expected_value: float
 ) -> bool:
     """Return True if parameter_name has approx expected_value."""
@@ -93,7 +93,7 @@ def test_create_dir_tree(tmpdir: local) -> None:
         para_value = scan_range[0] + (i / (n_dirs - 1)) * (
             scan_range[1] - scan_range[0]
         )
-        assert check_parameter_in_conditions(cond_file, parameter_to_scan, para_value)
+        assert _check_parameter_in_conditions(cond_file, parameter_to_scan, para_value)
     # Should raise an exception when trying to edit the mesh file
     edit_file = "mesh.xml"
     with pytest.raises(ValueError, match=r".* a CONDITIONS node.*"):
@@ -153,11 +153,11 @@ def test_create_dict_sweep(tmpdir: local) -> None:
             para_value = scan_range[0] + (indices[i] / (n_divs - 1)) * (
                 scan_range[1] - scan_range[0]
             )
-            assert check_parameter_in_conditions(
+            assert _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
             )
             with pytest.raises(ValueError, match=r".*CONDITIONS.*"):
                 # The mesh file should be not edited
-                assert check_parameter_in_conditions(
+                assert _check_parameter_in_conditions(
                     this_dir / "mesh.xml", parameter, para_value
                 )
