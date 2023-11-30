@@ -161,6 +161,10 @@ fabsim -l machines
 
 Further information on running FabSIM can be found in the [FabSIM documentation](https://fabsim3.readthedocs.io/en/latest/).
 
+## Contributing
+
+If you are interested in contributing to FabNESO please see our separate [contributors guide](CONTRIBUTORS.md).
+
 ## Acknowledgements
 
 This work was funded by a grant from the ExCALIBUR programme.
