@@ -12,7 +12,7 @@ We follow [GitHub flow](https://docs.github.com/en/get-started/quickstart/github
 
 Once you believe the changes are ready, request a review. The reviewer may approve the pull request directly or request changes are made. Any comments or suggestions from the reviewer should be addressed at this point.
 
-GitHub Actions workflow jobs performing tests and checks will be automatically triggered on creation of a pull request and any subsequent pushes to the associated branch; the status of these checks will reported on the pull request and all checks will need to pass before the pull request can be merged.
+GitHub Actions workflow jobs performing tests and checks will be automatically triggered on creation of a pull request and any subsequent pushes to the associated branch; the status of these checks will be reported on the pull request and all checks will need to pass before the pull request can be merged.
 
 Once all checks have passed, all review commments have been addressed and the reviewer(s) have approved the pull request, the pull request should be merged as a squash commit by a user with write access to the repository, and the associated branch deleted.
 
@@ -26,7 +26,7 @@ pre-commit install
 
 from the root of the repository to locally set up the Git hook scripts.
 
-Once set up, the hooks will be run against the changes made in each commit with errors being reported (and the commit aborted) if checks fail. In some cases the scripts may be able to automatically fix the identified issues in which case it will be sufficient to simply stage the additional changes made and re-run the commit command.
+Once set up, the hooks will be run against the changes made in each commit with errors being reported (and the commit aborted) if checks fail. In some cases the scripts may be able to automatically fix the identified issues, in which case it will be sufficient to simply stage the additional changes made and re-run the commit command.
 
 ### Coding conventions
 
