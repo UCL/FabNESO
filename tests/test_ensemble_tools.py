@@ -1,4 +1,4 @@
-"""Test the utility scripts."""
+"""Tests for the ensemble_tools utilities."""
 
 import itertools
 import re
@@ -14,7 +14,7 @@ from FabNESO.ensemble_tools import create_dict_sweep, create_dir_tree, edit_para
 
 
 def test_edit_parameters(tmpdir: local) -> None:
-    """Test the edit_parameters method."""
+    """Test the edit_parameters method of ensemble_tools."""
     parameter_to_test = "particle_initial_velocity"
     parameter_test_value = 10.0
     temp_conditions_path = Path(tmpdir) / "conditions.xml"
@@ -32,7 +32,7 @@ def test_edit_parameters(tmpdir: local) -> None:
 def check_parameter_in_conditions(
     conditions_file_name: Path, parameter_name: str, expected_value: float
 ) -> bool:
-    """Return True if parameter_pattern is found in the PARAMETERS section."""
+    """Return True if parameter_name has approx expected_value."""
     data = ElementTree.parse(conditions_file_name)
     root = data.getroot()
     conditions = root.find("CONDITIONS")
@@ -64,7 +64,7 @@ def check_parameter_in_conditions(
 
 
 def test_create_dir_tree(tmpdir: local) -> None:
-    """Test the create_dir_tree() method."""
+    """Test the create_dir_tree method of ensemble_tools."""
     test_sweep_dir = Path(tmpdir) / "test_sweep"
     n_dirs = 5
     destructive = True
@@ -110,7 +110,7 @@ def test_create_dir_tree(tmpdir: local) -> None:
 
 
 def test_create_dict_sweep(tmpdir: local) -> None:
-    """Test the create_dict_sweep method of utils/ensemble_tools.py."""
+    """Test the create_dict_sweep method of ensemble_tools."""
     sweep_path = Path(tmpdir) / "test"
     n_divs = 5
     destructive = True
