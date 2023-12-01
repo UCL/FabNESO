@@ -113,9 +113,18 @@ def test_create_dir_tree(
             if n_dirs == 1
             else scan_range[0] + (i / (n_dirs - 1)) * (scan_range[1] - scan_range[0])
         )
+        # Check the parameter has been edited correctly and appears only once
         assert _check_parameter_in_conditions(
             cond_file, parameter_to_scan, para_value
         ) == (1, 0)
+        # Use an incorrect value of the parameter to get (0,1)
+        assert _check_parameter_in_conditions(
+            cond_file, parameter_to_scan, para_value + 10.0
+        ) == (0, 1)
+        # Make up a parameter and check we get (0,0)
+        assert _check_parameter_in_conditions(
+            cond_file, "fake_parameter", para_value
+        ) == (0, 0)
 
 
 def _call_create_dir_tree_from_dict(input_dict: dict) -> None:
