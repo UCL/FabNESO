@@ -41,7 +41,7 @@ def create_dir_tree(
         if destructive:
             shutil.rmtree(sweep_path)
         else:
-            msg = "Path already exists and not in destructive mode"
+            msg = f"Path {sweep_path} already exists and not in destructive mode"
             raise FileExistsError(msg)
     sweep_path.mkdir(parents=True)
 
