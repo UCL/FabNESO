@@ -4,36 +4,36 @@ import itertools
 import re
 import shutil
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
-from defusedxml import ElementTree
-from py.path import local
 
 # from plugins.FabNESO.utils.make_sweep_dir
 from FabNESO.ensemble_tools import create_dict_sweep, create_dir_tree, edit_parameters
 
 
-def test_edit_parameters(tmpdir: local) -> None:
+def test_edit_parameters(tmp_path: Path) -> None:
     """Test the edit_parameters method of ensemble_tools."""
     parameter_to_test = "particle_initial_velocity"
     parameter_test_value = 10.0
-    temp_conditions_path = Path(tmpdir) / "conditions.xml"
+    temp_conditions_path = tmp_path / "conditions.xml"
     shutil.copyfile(
-        Path("config_files") / "two_stream" / "conditions.xml", temp_conditions_path
+        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml",
+        temp_conditions_path,
     )
 
     edit_parameters(temp_conditions_path, {parameter_to_test: parameter_test_value})
 
     assert _check_parameter_in_conditions(
         temp_conditions_path, parameter_to_test, parameter_test_value
-    )
+    ) == (1, 0)
 
 
 def _check_parameter_in_conditions(
     conditions_file_name: Path, parameter_name: str, expected_value: float
-) -> bool:
-    """Return True if parameter_name has approx expected_value."""
-    data = ElementTree.parse(conditions_file_name)
+) -> tuple[int, int]:
+    """Return number of matched and failed parameters in conditions_file_name."""
+    data = ElementTree.parse(conditions_file_name)  # noqa: S314
     root = data.getroot()
     conditions = root.find("CONDITIONS")
     if conditions is None:
@@ -41,13 +41,18 @@ def _check_parameter_in_conditions(
         raise ValueError(msg)
     parameters = conditions.find("PARAMETERS")
     if parameters is None:
-        msg = f"Failed to find PARAMETERS in the \
-        CONDITIONS node of {conditions_file_name}"
+        msg = (
+            "Failed to find PARAMETERS in the CONDITIONS node"
+            f" of {conditions_file_name}"
+        )
         raise ValueError(msg)
 
+    # The number of instances that the parameter appears and is expected, and not
+    n_equals = 0
+    n_different = 0
     for element in parameters.iter("P"):
         match = re.match(
-            r"\s*(?P<key>\w+)\s*=\s*(?P<value>-?\d*(\.?\d)+)\s*", element.text
+            r"\s*(?P<key>\w+)\s*=\s*(?P<value>-?\d*(\.?\d)+)\s*", str(element.text)
         )
         if match is None:
             msg = f"Parameter definition of unexpected format: {element.text}"
@@ -55,17 +60,17 @@ def _check_parameter_in_conditions(
         key = match.group("key")
         value = float(match.group("value"))
         if key == parameter_name:
-            return expected_value == pytest.approx(value)  # Because of rounding errors
+            if expected_value == pytest.approx(value):
+                n_equals += 1
+            else:
+                n_different += 1
 
-    # If we make it this far then we haven't found the parameter we were looking for,
-    # which is surely a problem in its own right
-    msg = f"Could not find the parameter {parameter_name} in {conditions_file_name}"
-    raise ValueError(msg)
+    return (n_equals, n_different)
 
 
-def test_create_dir_tree(tmpdir: local) -> None:
+def test_create_dir_tree(tmp_path: Path) -> None:
     """Test the create_dir_tree method of ensemble_tools."""
-    test_sweep_dir = Path(tmpdir) / "test_sweep"
+    test_sweep_dir = tmp_path / "test_sweep"
     n_dirs = 5
     destructive = True
     copy_dir = Path("config_files") / "two_stream"
@@ -93,7 +98,9 @@ def test_create_dir_tree(tmpdir: local) -> None:
         para_value = scan_range[0] + (i / (n_dirs - 1)) * (
             scan_range[1] - scan_range[0]
         )
-        assert _check_parameter_in_conditions(cond_file, parameter_to_scan, para_value)
+        assert _check_parameter_in_conditions(
+            cond_file, parameter_to_scan, para_value
+        ) == (1, 0)
     # Should raise an exception when trying to edit the mesh file
     edit_file = "mesh.xml"
     with pytest.raises(ValueError, match=r".* a CONDITIONS node.*"):
@@ -109,9 +116,9 @@ def test_create_dir_tree(tmpdir: local) -> None:
         )
 
 
-def test_create_dict_sweep(tmpdir: local) -> None:
+def test_create_dict_sweep(tmp_path: Path) -> None:
     """Test the create_dict_sweep method of ensemble_tools."""
-    sweep_path = Path(tmpdir) / "test"
+    sweep_path = tmp_path / "test"
     n_divs = 5
     destructive = True
     copy_dir = Path("config_files") / "two_stream"
@@ -155,7 +162,7 @@ def test_create_dict_sweep(tmpdir: local) -> None:
             )
             assert _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
-            )
+            ) == (1, 0)
             with pytest.raises(ValueError, match=r".*CONDITIONS.*"):
                 # The mesh file should be not edited
                 assert _check_parameter_in_conditions(
