@@ -55,7 +55,9 @@ def create_dir_tree(
         # template scan if we're doing that
         edit_parameters(new_dir / edit_file, {parameter_to_scan: para_val})
         # iterate para_val
-        para_val += (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
+        para_val += (
+            0 if n_dirs == 1 else (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
+        )
 
 
 def _product_dict(input_dict: dict) -> Iterator[dict]:
@@ -79,10 +81,14 @@ def create_dict_sweep(
     if destructive and sweep_path.is_dir():
         shutil.rmtree(sweep_path)
     # Uniformly spaced grids on [low, high] for each parameter
-    parameter_grids = {
-        key: [low + (i / (n_divs - 1)) * (high - low) for i in range(n_divs)]
-        for key, (low, high) in parameter_dict.items()
-    }
+    parameter_grids = (
+        {key: [low] for key, (low, high) in parameter_dict.items()}
+        if n_divs == 1
+        else {
+            key: [low + (i / (n_divs - 1)) * (high - low) for i in range(n_divs)]
+            for key, (low, high) in parameter_dict.items()
+        }
+    )
     # Compute Cartesian products of all parameter value combinations plus grid indices
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
