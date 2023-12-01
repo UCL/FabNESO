@@ -163,7 +163,7 @@ Further information on running FabSIM can be found in the [FabSIM documentation]
 
 ## Contributing
 
-If you are interested in contributing to FabNESO please see our separate [contributors guide](CONTRIBUTORS.md).
+If you are interested in contributing to FabNESO please see our separate [contributors guide](CONTRIBUTING.md).
 
 ## Acknowledgements
 
