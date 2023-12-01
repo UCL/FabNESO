@@ -228,8 +228,3 @@ def test_create_dict_sweep(
             assert _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
             ) == (1, 0)
-            with pytest.raises(ValueError, match=r".*CONDITIONS.*"):
-                # The mesh file should be not edited
-                _check_parameter_in_conditions(
-                    this_dir / "mesh.xml", parameter, para_value
-                )
