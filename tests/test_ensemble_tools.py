@@ -188,6 +188,10 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
     argument_dict["edit_file"] = "fake_name.xml"
     with pytest.raises(FileNotFoundError, match=".*does not exist"):
         create_dir_tree(**argument_dict)
+    argument_dict["edit_file"] = "conditions.xml"
+    argument_dict["parameter_to_scan"] = ""
+    with pytest.raises(ValueError, match=".*left empty"):
+        create_dir_tree(**argument_dict)
 
 
 @pytest.mark.parametrize("n_divs", [1, 3, 5, 10])

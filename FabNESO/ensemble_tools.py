@@ -35,6 +35,9 @@ def create_dir_tree(
     if parameter_to_scan is None:
         msg = "parameter_to_scan not defined"
         raise TypeError(msg)
+    if parameter_to_scan == "":
+        msg = "parameter_to_scan left empty"
+        raise ValueError(msg)
 
     # Make the base directory
     if sweep_path.is_dir():
