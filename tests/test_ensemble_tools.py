@@ -69,6 +69,30 @@ def _check_parameter_in_conditions(
     return (n_equals, n_different)
 
 
+def test_check_parameter_in_conditions(tmp_path: Path) -> None:
+    """Test that the private xml parser method of this class."""
+    parameter_to_test = "particle_initial_velocity"
+    parameter_test_value = 10.0
+    test_cond_path = tmp_path / "conditions.xml"
+    shutil.copyfile(
+        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml",
+        test_cond_path,
+    )
+    edit_parameters(test_cond_path, {parameter_to_test: parameter_test_value})
+    # Test that a different value of the test_value returns exactly 1 non-matched result
+    n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
+        test_cond_path, parameter_to_test, parameter_test_value + 10.0
+    )
+    assert n_equal_in_value == 0
+    assert n_different_in_value == 1
+    # Pass a fake parameter name. Should find 0 results
+    n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
+        test_cond_path, "fake_parameter", parameter_test_value
+    )
+    assert n_equal_in_value == 0
+    assert n_different_in_value == 0
+
+
 @pytest.mark.parametrize("n_dirs", [1, 3, 5, 10])
 @pytest.mark.parametrize("destructive", [True, False])
 @pytest.mark.parametrize(
