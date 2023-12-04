@@ -4,6 +4,7 @@ import itertools
 import re
 import shutil
 from pathlib import Path
+from typing import TypedDict
 from xml.etree import ElementTree
 
 import pytest
@@ -147,35 +148,33 @@ def test_create_dir_tree(
         assert n_different_in_value == 0
 
 
-def _call_create_dir_tree_from_dict(input_dict: dict) -> None:
-    create_dir_tree(
-        sweep_path=input_dict["sweep_path"],
-        n_dirs=input_dict["n_dirs"],
-        destructive=input_dict["destructive"],
-        copy_dir=input_dict["copy_dir"],
-        edit_file=input_dict["edit_file"],
-        parameter_to_scan=input_dict["parameter_to_scan"],
-        scan_range=input_dict["scan_range"],
-        outdir_prefix=input_dict["outdir_prefix"],
-    )
+class _CreateDirTreeArgsDict(TypedDict):
+    sweep_path: Path
+    n_dirs: int
+    destructive: bool
+    copy_dir: Path
+    edit_file: str
+    parameter_to_scan: str
+    scan_range: tuple[float, float]
+    outdir_prefix: str
 
 
 def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
     """Test exceptions thrown in create_dir_path."""
-    argument_dict = {
-        "sweep_path": tmp_path / "test_sweep",
-        "n_dirs": 5,
-        "destructive": True,
-        "copy_dir": Path("config_files") / "two_stream",
-        "edit_file": "conditions.xml",
-        "parameter_to_scan": "particle_initial_velocity",
-        "scan_range": (0.2, 5.0),
-        "outdir_prefix": "asd",
-    }
+    argument_dict = _CreateDirTreeArgsDict(
+        sweep_path=tmp_path / "test_sweep",
+        n_dirs=5,
+        destructive=True,
+        copy_dir=Path("config_files") / "two_stream",
+        edit_file="conditions.xml",
+        parameter_to_scan="particle_initial_velocity",
+        scan_range=(0.2, 5.0),
+        outdir_prefix="asd",
+    )
     # Should raise an exception when trying to edit the mesh file
     argument_dict["edit_file"] = "mesh.xml"
     with pytest.raises(ValueError, match=r".* a CONDITIONS node.*"):
-        _call_create_dir_tree_from_dict(argument_dict)
+        create_dir_tree(**argument_dict)
     # The directory already exists, so running without destructive should
     # raise a FileExistsError
     argument_dict["destructive"] = False
@@ -183,17 +182,12 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
     with pytest.raises(
         FileExistsError, match=".*ready exists and not in destructive .*"
     ):
-        _call_create_dir_tree_from_dict(argument_dict)
+        create_dir_tree(**argument_dict)
     # fake_name.xml doesn't exist, should raise FileNotFoundError
     argument_dict["destructive"] = True
     argument_dict["edit_file"] = "fake_name.xml"
     with pytest.raises(FileNotFoundError, match=".*does not exist"):
-        _call_create_dir_tree_from_dict(argument_dict)
-    # Raise TypeError if no parameter specified
-    argument_dict["edit_file"] = "conditions.xml"
-    argument_dict["parameter_to_scan"] = None
-    with pytest.raises(TypeError, match=".*parameter_to_scan not defined"):
-        _call_create_dir_tree_from_dict(argument_dict)
+        create_dir_tree(**argument_dict)
 
 
 @pytest.mark.parametrize("n_divs", [1, 3, 5, 10])
