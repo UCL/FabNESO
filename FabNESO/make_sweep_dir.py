@@ -62,7 +62,7 @@ def main() -> None:
     parser.add_argument("--dir_prefix", help="Prefix to call output dir", default="d")
     args = parser.parse_args()
 
-    if args.parameter_dict:
+    if args.parameter_dict != "":
         # If this has been specified, we'll automatically create
         # the directory tree as a multidimensional scan of these points
         parameter_dict = literal_eval(args.parameter_dict)
@@ -80,7 +80,7 @@ def main() -> None:
             parameter_dict=parameter_dict,
         )
 
-    else:
+    elif args.para_to_template != "":
         create_dir_tree(
             sweep_path=args.sweep_path,
             n_dirs=args.n_divs,
@@ -91,6 +91,12 @@ def main() -> None:
             scan_range=(args.scan_min, args.scan_max),
             outdir_prefix=args.dir_prefix,
         )
+    else:
+        msg = (
+            "Please either define a parameter_dict or chose a para_to_template"
+            " for the sweep directory"
+        )
+        raise ValueError(msg)
 
 
 if __name__ == "__main__":
