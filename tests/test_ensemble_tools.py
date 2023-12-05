@@ -71,7 +71,7 @@ def _check_parameter_in_conditions(
 
 
 def test_check_parameter_in_conditions(tmp_path: Path) -> None:
-    """Test that the private xml parser method of this class."""
+    """Test the private xml parser method of this class."""
     parameter_to_test = "particle_initial_velocity"
     parameter_test_value = 10.0
     test_cond_path = tmp_path / "conditions.xml"
