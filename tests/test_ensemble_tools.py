@@ -8,6 +8,7 @@ from typing import TypedDict
 import pytest
 
 from FabNESO.ensemble_tools import (
+    calculate_parameter_value,
     create_dict_sweep,
     create_dir_tree,
     edit_parameters,
@@ -116,11 +117,7 @@ def test_create_dir_tree(
     for i in range(n_dirs):
         cond_file = test_sweep_dir / "SWEEP" / f"{outdir_prefix}{i}" / "conditions.xml"
         assert cond_file.is_file()
-        para_value = (
-            scan_range[0]
-            if n_dirs == 1
-            else scan_range[0] + (i / (n_dirs - 1)) * (scan_range[1] - scan_range[0])
-        )
+        para_value = calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
         # Check the parameter has been edited correctly and appears only once
         n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
             cond_file, parameter_to_scan, para_value
@@ -175,7 +172,7 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
         create_dir_tree(**argument_dict)
 
 
-@pytest.mark.parametrize("n_divs", [1, 3, 5, 10])
+@pytest.mark.parametrize("n_dirs", [1, 3, 5, 10])
 @pytest.mark.parametrize("destructive", [True, False])
 @pytest.mark.parametrize(
     "parameter_dict",
@@ -191,7 +188,7 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
     ],
 )
 def test_create_dict_sweep(
-    tmp_path: Path, *, n_divs: int, destructive: bool, parameter_dict: dict
+    tmp_path: Path, *, n_dirs: int, destructive: bool, parameter_dict: dict
 ) -> None:
     """Test the create_dict_sweep method of ensemble_tools."""
     sweep_path = tmp_path / "test"
@@ -199,18 +196,18 @@ def test_create_dict_sweep(
     edit_file = "conditions.xml"
     create_dict_sweep(
         sweep_path=sweep_path,
-        n_divs=n_divs,
+        n_dirs=n_dirs,
         destructive=destructive,
         copy_dir=copy_dir,
         edit_file=edit_file,
         parameter_dict=parameter_dict,
     )
-    n_total_directories = n_divs ** len(parameter_dict)
+    n_total_directories = n_dirs ** len(parameter_dict)
     # Check we make the corect number of directories
     assert len(list((sweep_path / "SWEEP").iterdir())) == n_total_directories
 
     # Loop through the directories and check the conditions file
-    for indices in itertools.product(*(range(n_divs),) * len(parameter_dict)):
+    for indices in itertools.product(*(range(n_dirs),) * len(parameter_dict)):
         directory_name = "-".join(
             f"{k}_{i}" for k, i in zip(parameter_dict, indices, strict=True)
         )
@@ -227,11 +224,8 @@ def test_create_dict_sweep(
         for i in range(len(parameter_dict)):
             parameter = list(parameter_dict.keys())[i]
             scan_range = parameter_dict[parameter]
-            para_value = (
-                scan_range[0]
-                if n_divs == 1
-                else scan_range[0]
-                + (indices[i] / (n_divs - 1)) * (scan_range[1] - scan_range[0])
+            para_value = calculate_parameter_value(
+                n_dirs, scan_range[0], scan_range[1], indices[i]
             )
             n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value

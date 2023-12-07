@@ -48,19 +48,27 @@ def create_dir_tree(
             raise FileExistsError(msg)
     sweep_path.mkdir(parents=True)
 
-    # Set the initial value of the scanned parameter to the lower limit
-    para_val = scan_range[0]
-
     for i in range(n_dirs):
+        para_val = calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
         new_dir = Path(sweep_path) / "SWEEP" / f"{outdir_prefix}{i}"
         shutil.copytree(copy_dir, new_dir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
         edit_parameters(new_dir / edit_file, {parameter_to_scan: para_val})
-        # iterate para_val
-        para_val += (
-            0 if n_dirs == 1 else (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
-        )
+
+
+def calculate_parameter_value(
+    n_dirs: int,
+    initial_value: float,
+    final_value: float,
+    iteration: int,
+) -> float:
+    """Return the value of the parameter at a given iteration."""
+    return (
+        initial_value
+        if n_dirs == 1
+        else initial_value + (iteration / (n_dirs - 1)) * (final_value - initial_value)
+    )
 
 
 def _product_dict(input_dict: dict) -> Iterator[dict]:
@@ -73,7 +81,7 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
 def create_dict_sweep(
     *,
     sweep_path: Path,
-    n_divs: int,
+    n_dirs: int,
     destructive: bool,
     copy_dir: Path,
     edit_file: str,
@@ -84,18 +92,14 @@ def create_dict_sweep(
     if destructive and sweep_path.is_dir():
         shutil.rmtree(sweep_path)
     # Uniformly spaced grids on [low, high] for each parameter
-    parameter_grids = (
-        {key: [low] for key, (low, high) in parameter_dict.items()}
-        if n_divs == 1
-        else {
-            key: [low + (i / (n_divs - 1)) * (high - low) for i in range(n_divs)]
-            for key, (low, high) in parameter_dict.items()
-        }
-    )
+    parameter_grids = {
+        key: [calculate_parameter_value(n_dirs, low, high, i) for i in range(n_dirs)]
+        for key, (low, high) in parameter_dict.items()
+    }
     # Compute Cartesian products of all parameter value combinations plus grid indices
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
-        itertools.product(*(range(n_divs),) * len(parameter_dict)),
+        itertools.product(*(range(n_dirs),) * len(parameter_dict)),
         strict=True,
     ):
         directory_name = "-".join(
