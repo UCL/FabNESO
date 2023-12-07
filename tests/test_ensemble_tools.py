@@ -279,3 +279,32 @@ def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None
     assert len(parameter_values) == n_unique_entries
     for value in parameter_values:
         assert min(scan_range) <= value <= max(scan_range)
+
+
+@pytest.mark.parametrize("n_dirs", [1, 3, 100])
+@pytest.mark.parametrize(
+    "parameter_list",
+    [
+        {"particle_initial_velocity": [], "particle_charge_density": []},
+        {
+            "particle_initial_velocity": [],
+            "particle_charge_density": [],
+            "particle_number_density": [],
+        },
+    ],
+)
+def test_return_directory_name(n_dirs: int, parameter_list: dict) -> None:
+    """Test the return_directory_name method."""
+    directory_names = []
+    # Create a dummy set of indices based on n_dirs
+    for indices in itertools.product(*(range(n_dirs),) * len(parameter_list)):
+        dir_name = return_directory_name(parameter_list, indices)
+        # Check that each parameter only appears once in the directory name
+        for parameter in parameter_list:
+            assert dir_name.count(parameter) == 1
+        directory_names.append(dir_name)
+    # Check we've made the correct number of directories
+    assert len(directory_names) == n_dirs ** len(parameter_list)
+    # Check that we've made unique directories
+    n_unique_dirs = len(set(directory_names))
+    assert len(directory_names) == n_unique_dirs
