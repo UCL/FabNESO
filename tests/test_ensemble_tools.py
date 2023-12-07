@@ -13,6 +13,7 @@ from FabNESO.ensemble_tools import (
     create_dir_tree,
     edit_parameters,
     list_parameter_values,
+    return_directory_name,
 )
 
 
@@ -232,9 +233,7 @@ def test_create_dict_sweep(
 
     # Loop through the directories and check the conditions file
     for indices in itertools.product(*(range(n_dirs),) * len(parameter_dict)):
-        directory_name = "-".join(
-            f"{k}_{i}" for k, i in zip(parameter_dict, indices, strict=True)
-        )
+        directory_name = return_directory_name(parameter_dict, indices)
         this_dir = sweep_path / "SWEEP" / directory_name
 
         # Check the directory exists

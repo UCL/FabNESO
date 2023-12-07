@@ -6,7 +6,7 @@ import itertools
 import re
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from xml.etree import ElementTree
 
 if TYPE_CHECKING:
@@ -102,12 +102,15 @@ def create_dict_sweep(
         itertools.product(*(range(n_dirs),) * len(parameter_dict)),
         strict=True,
     ):
-        directory_name = "-".join(
-            f"{k}_{i}" for k, i in zip(parameter_values, indices, strict=True)
-        )
+        directory_name = return_directory_name(parameter_values, indices)
         directory_path = Path(sweep_path) / "SWEEP" / directory_name
         shutil.copytree(copy_dir, directory_path)
         edit_parameters(directory_path / edit_file, parameter_values)
+
+
+def return_directory_name(parameter_values: dict, indices: tuple[Any, ...]) -> str:
+    """Return the directory name given parameter names and indices."""
+    return "-".join(f"{k}_{i}" for k, i in zip(parameter_values, indices, strict=True))
 
 
 def list_parameter_values(conditions_file: Path, parameter_name: str) -> list[str]:
