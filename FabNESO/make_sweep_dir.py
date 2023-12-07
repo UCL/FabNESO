@@ -73,7 +73,7 @@ def main() -> None:
         # Use the dict to create a sweep directory
         create_dict_sweep(
             sweep_path=args.sweep_path,
-            n_divs=args.n_divs,
+            n_dirs=args.n_divs,
             destructive=args.destructive,
             copy_dir=args.copy_dir,
             edit_file=args.edit_file,
