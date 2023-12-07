@@ -232,3 +232,27 @@ def test_create_dict_sweep(
             )
             assert n_equal_in_value == 1
             assert n_different_in_value == 0
+
+
+@pytest.mark.parametrize("n_dirs", [1, 3, 100])
+@pytest.mark.parametrize(
+    "scan_range",
+    [
+        [1.0, 3.0],
+        [10000, 20000],
+        [5.0, 4.0],
+    ],
+)
+def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None:
+    """Tests the calculate_parameter_value method of ensemble_tools."""
+    parameter_values = [
+        calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
+        for i in range(n_dirs)
+    ]
+    # Check the returned list has the correct number of entries
+    assert len(parameter_values) == n_dirs
+    # Check the values in the generated list are unique
+    n_unique_entries = len(set(parameter_values))
+    assert len(parameter_values) == n_unique_entries
+    for value in parameter_values:
+        assert min(scan_range) <= value <= max(scan_range)
