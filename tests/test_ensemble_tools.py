@@ -52,6 +52,30 @@ def _check_parameter_in_conditions(
     return (n_equals, n_different)
 
 
+def test_list_parameter_values() -> None:
+    """Test the list_parameter_values method in ensemble_tools."""
+    conditions_file = (
+        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml"
+    )
+    parameter_values = list_parameter_values(
+        conditions_file, "particle_initial_velocity"
+    )
+    # Check that we only find one instance
+    assert len(parameter_values) == 1
+    # Check the default parameter value
+    original_value = 1.0
+    assert float(parameter_values[0]) == original_value
+    # Test a fake parameter
+    parameter_values = list_parameter_values(conditions_file, "fake_parameter_not_real")
+    assert len(parameter_values) == 0
+    # Test raise a ValueError when using an incorrect xml file
+    with pytest.raises(ValueError, match=r".*Failed to find CONDITIONS.*"):
+        parameter_values = list_parameter_values(
+            Path(__file__).parents[1] / "config_files" / "two_stream" / "mesh.xml",
+            "particle_initial_velocity",
+        )
+
+
 def test_check_parameter_in_conditions(tmp_path: Path) -> None:
     """Test the private xml parser method of this class."""
     parameter_to_test = "particle_initial_velocity"
