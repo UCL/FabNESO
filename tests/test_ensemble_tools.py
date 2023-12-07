@@ -1,15 +1,18 @@
 """Tests for the ensemble_tools utilities."""
 
 import itertools
-import re
 import shutil
 from pathlib import Path
 from typing import TypedDict
-from xml.etree import ElementTree
 
 import pytest
 
-from FabNESO.ensemble_tools import create_dict_sweep, create_dir_tree, edit_parameters
+from FabNESO.ensemble_tools import (
+    create_dict_sweep,
+    create_dir_tree,
+    edit_parameters,
+    list_parameter_values,
+)
 
 
 def test_edit_parameters(tmp_path: Path) -> None:
@@ -35,37 +38,15 @@ def _check_parameter_in_conditions(
     conditions_file_name: Path, parameter_name: str, expected_value: float
 ) -> tuple[int, int]:
     """Return number of matched and failed parameters in conditions_file_name."""
-    data = ElementTree.parse(conditions_file_name)  # noqa: S314
-    root = data.getroot()
-    conditions = root.find("CONDITIONS")
-    if conditions is None:
-        msg = f"Failed to find CONDITIONS in the file {conditions_file_name}"
-        raise ValueError(msg)
-    parameters = conditions.find("PARAMETERS")
-    if parameters is None:
-        msg = (
-            "Failed to find PARAMETERS in the CONDITIONS node"
-            f" of {conditions_file_name}"
-        )
-        raise ValueError(msg)
-
-    # The number of instances that the parameter appears and is expected, and not
+    values = list_parameter_values(conditions_file_name, parameter_name)
+    # Number of matched and different parameters
     n_equals = 0
     n_different = 0
-    for element in parameters.iter("P"):
-        match = re.match(
-            r"\s*(?P<key>\w+)\s*=\s*(?P<value>-?\d*(\.?\d)+)\s*", str(element.text)
-        )
-        if match is None:
-            msg = f"Parameter definition of unexpected format: {element.text}"
-            raise ValueError(msg)
-        key = match.group("key")
-        value = float(match.group("value"))
-        if key == parameter_name:
-            if expected_value == pytest.approx(value):
-                n_equals += 1
-            else:
-                n_different += 1
+    for value in values:
+        if expected_value == pytest.approx(float(value)):
+            n_equals += 1
+        else:
+            n_different += 1
 
     return (n_equals, n_different)
 

@@ -106,6 +106,37 @@ def create_dict_sweep(
         edit_parameters(directory_path / edit_file, parameter_values)
 
 
+def list_parameter_values(conditions_file: Path, parameter_name: str) -> list[str]:
+    """Return a list of the values of a given parameter_name in conditions_file."""
+    data = ElementTree.parse(conditions_file)  # noqa: S314
+    root = data.getroot()
+    conditions = root.find("CONDITIONS")
+    if conditions is None:
+        msg = f"Failed to find CONDITIONS in the file {conditions_file}"
+        raise ValueError(msg)
+    parameters = conditions.find("PARAMETERS")
+    if parameters is None:
+        msg = (
+            "Failed to find PARAMETERS in the CONDITIONS node" f" of {conditions_file}"
+        )
+        raise ValueError(msg)
+
+    # List of matched parameter values
+    values = []
+    for element in parameters.iter("P"):
+        match = re.match(
+            r"\s*(?P<key>\w+)\s*=\s*(?P<value>-?\d*(\.?\d)+)\s*", str(element.text)
+        )
+        if match is None:
+            msg = f"Parameter definition of unexpected format: {element.text}"
+            raise ValueError(msg)
+        key = match.group("key")
+        value = str(match.group("value"))
+        if key == parameter_name:
+            values.append(value)
+    return values
+
+
 def edit_parameters(
     conditions_file: Path, parameter_overrides: Mapping[str, float | str]
 ) -> None:
