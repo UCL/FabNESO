@@ -78,6 +78,11 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
         yield dict(zip(keys, values, strict=True))
 
 
+def indices_iterator(n_dirs: int, n_parameters: int) -> Iterator[tuple[Any, ...]]:
+    """Create an iterator for the indices of the dictionary sweep."""
+    yield from itertools.product(*(range(n_dirs),) * n_parameters)
+
+
 def create_dict_sweep(
     *,
     sweep_path: Path,
@@ -99,7 +104,7 @@ def create_dict_sweep(
     # Compute Cartesian products of all parameter value combinations plus grid indices
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
-        itertools.product(*(range(n_dirs),) * len(parameter_dict)),
+        indices_iterator(n_dirs, len(parameter_grids)),
         strict=True,
     ):
         directory_name = return_directory_name(parameter_values, indices)

@@ -1,6 +1,5 @@
 """Tests for the ensemble_tools utilities."""
 
-import itertools
 import shutil
 from pathlib import Path
 from typing import TypedDict
@@ -12,6 +11,7 @@ from FabNESO.ensemble_tools import (
     create_dict_sweep,
     create_dir_tree,
     edit_parameters,
+    indices_iterator,
     list_parameter_values,
     return_directory_name,
 )
@@ -232,7 +232,7 @@ def test_create_dict_sweep(
     assert len(list((sweep_path / "SWEEP").iterdir())) == n_total_directories
 
     # Loop through the directories and check the conditions file
-    for indices in itertools.product(*(range(n_dirs),) * len(parameter_dict)):
+    for indices in indices_iterator(n_dirs, len(parameter_dict)):
         directory_name = return_directory_name(parameter_dict, indices)
         this_dir = sweep_path / "SWEEP" / directory_name
 
@@ -297,7 +297,7 @@ def test_return_directory_name(n_dirs: int, parameter_list: dict) -> None:
     """Test the return_directory_name method."""
     directory_names = []
     # Create a dummy set of indices based on n_dirs
-    for indices in itertools.product(*(range(n_dirs),) * len(parameter_list)):
+    for indices in indices_iterator(n_dirs, len(parameter_list)):
         dir_name = return_directory_name(parameter_list, indices)
         # Check that each parameter only appears once in the directory name
         for parameter in parameter_list:
@@ -308,3 +308,16 @@ def test_return_directory_name(n_dirs: int, parameter_list: dict) -> None:
     # Check that we've made unique directories
     n_unique_dirs = len(set(directory_names))
     assert len(directory_names) == n_unique_dirs
+
+
+@pytest.mark.parametrize("n_dirs", [1, 3, 7])
+@pytest.mark.parametrize("n_parameters", [1, 2, 5, 7])
+def test_indices_iterator(n_dirs: int, n_parameters: int) -> None:
+    """The the indices_iterator from the ensemble_tools."""
+    indices_list = []
+    for indices in indices_iterator(n_dirs, n_parameters):
+        assert len(indices) == n_parameters
+        indices_list.append(indices)
+    assert len(indices_list) == n_dirs**n_parameters
+    n_unique_indices = len(set(indices_list))
+    assert n_unique_indices == len(indices_list)
