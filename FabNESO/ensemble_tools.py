@@ -105,8 +105,12 @@ def create_dict_sweep(
         shutil.copytree(copy_dir, directory_path)
         edit_parameters(directory_path / edit_file, parameter_values)
 
+
 def edit_parameters(
-        conditions_file: Path, parameter_overrides: Mapping[str, float | str], create_missing: bool = False
+    conditions_file: Path,
+    parameter_overrides: Mapping[str, float | str],
+    *,
+    create_missing: bool = False,
 ) -> None:
     """Edit parameters in the configuration file to the desired value."""
     parser = ElementTree.XMLParser(  # noqa: S314
@@ -122,7 +126,7 @@ def edit_parameters(
     if parameters is None:
         msg = f"Conditions file {conditions_file} does not contain a PARAMETERS node."
         raise ValueError(msg)
-    parameter_found = {para_name:False for para_name in parameter_overrides.keys()}
+    parameter_found = {para_name: False for para_name in parameter_overrides}
     for element in parameters.iter("P"):
         if element.text is None:
             msg = f"Parameter element {element} does contain a definition."
