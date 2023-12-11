@@ -8,10 +8,10 @@ import shutil
 from contextlib import nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Any
 
 import numpy as np
 import pyvbmc
-from Typing import Any
 
 try:
     from fabsim.base import fab
@@ -135,6 +135,7 @@ def neso_vbmc(
         "neso_conditions_file": conditions_file_name,
         "neso_mesh_file": mesh_file_name,
         "para_overrides": {
+            # These ensure that the field information is written out
             "particle_num_write_field_steps": 100,
             "line_field_deriv_evaluations_step": 20,
             "line_field_deriv_evaluations_numx": 100,
@@ -142,28 +143,22 @@ def neso_vbmc(
         },
         "noise_factor": 0.1,
     }
-    # Definition of the parameters to scan and their max and min
+
+    # I want to define this inside the config_dict, but mypy simply will not allow it
     parameters_to_scan = {
         "particle_initial_velocity": (0.0, 2.0),
         "particle_charge_density": (20.0, 200.0),
         "particle_number_density": (20.0, 200.0),
     }
 
-    # Definitions of bounds required by VBMC
-    lower_bounds = np.array(
-        (
-            parameters_to_scan["particle_initial_velocity"][0],
-            parameters_to_scan["particle_charge_density"][0],
-            parameters_to_scan["particle_number_density"][0],
-        )
-    )
-    upper_bounds = np.array(
-        (
-            parameters_to_scan["particle_initial_velocity"][1],
-            parameters_to_scan["particle_charge_density"][1],
-            parameters_to_scan["particle_number_density"][1],
-        )
-    )
+    config_dict["parameters_to_scan"] = parameters_to_scan
+
+    config_dict["parameters_to_scan"]
+
+    bounds = list(zip(*parameters_to_scan.values(), strict=True))
+    lower_bounds = np.array(bounds[0])
+    upper_bounds = np.array(bounds[1])
+
     plausible_lower_bounds = lower_bounds + (upper_bounds - lower_bounds) / 4
     plausible_upper_bounds = upper_bounds - (upper_bounds - lower_bounds) / 4
     # Choose a random starting position
@@ -220,12 +215,11 @@ def log_density(
     config_dict: dict[str, Any],
 ) -> list:
     """Run an instance of the neso task and return the log_joint_density."""
-    parameters = {
-        "particle_initial_velocity": theta[0],
-        "particle_charge_density": theta[1],
-        "particle_number_density": theta[2],
+    parameters = dict(
+        zip(config_dict["parameters_to_scan"].keys(), theta, strict=True),
         **config_dict["para_overrides"],
-    }
+    )
+
     config_dict["para_overrides"] = parameters
     observed_results = run_instance_return_field(config_dict)
     return -(
