@@ -153,8 +153,6 @@ def neso_vbmc(
 
     config_dict["parameters_to_scan"] = parameters_to_scan
 
-    config_dict["parameters_to_scan"]
-
     bounds = list(zip(*parameters_to_scan.values(), strict=True))
     lower_bounds = np.array(bounds[0])
     upper_bounds = np.array(bounds[1])
