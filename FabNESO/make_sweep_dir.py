@@ -21,7 +21,7 @@ def main() -> None:
         default=Path(__file__).parent.parent / "config_files" / "two_stream_ensemble",
     )
     parser.add_argument(
-        "--n_divs",
+        "--n_dirs",
         help="Number of divisions in grid for each parameter",
         type=int,
         default=5,
@@ -73,7 +73,7 @@ def main() -> None:
         # Use the dict to create a sweep directory
         create_dict_sweep(
             sweep_path=args.sweep_path,
-            n_dirs=args.n_divs,
+            n_dirs=args.n_dirs,
             destructive=args.destructive,
             copy_dir=args.copy_dir,
             edit_file=args.edit_file,
@@ -83,7 +83,7 @@ def main() -> None:
     elif args.para_to_template != "":
         create_dir_tree(
             sweep_path=args.sweep_path,
-            n_dirs=args.n_divs,
+            n_dirs=args.n_dirs,
             destructive=args.destructive,
             copy_dir=args.copy_dir,
             edit_file=args.edit_file,
