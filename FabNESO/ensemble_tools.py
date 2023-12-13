@@ -48,19 +48,27 @@ def create_dir_tree(
             raise FileExistsError(msg)
     sweep_path.mkdir(parents=True)
 
-    # Set the initial value of the scanned parameter to the lower limit
-    para_val = scan_range[0]
-
     for i in range(n_dirs):
+        para_val = calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
         new_dir = Path(sweep_path) / "SWEEP" / f"{outdir_prefix}{i}"
         shutil.copytree(copy_dir, new_dir)
         # Now we edit the parameter file for our
         # template scan if we're doing that
         edit_parameters(new_dir / edit_file, {parameter_to_scan: para_val})
-        # iterate para_val
-        para_val += (
-            0 if n_dirs == 1 else (scan_range[1] - scan_range[0]) / float(n_dirs - 1)
-        )
+
+
+def calculate_parameter_value(
+    n_dirs: int,
+    initial_value: float,
+    final_value: float,
+    iteration: int,
+) -> float:
+    """Return the value of the parameter at a given iteration."""
+    return (
+        initial_value
+        if n_dirs == 1
+        else initial_value + (iteration / (n_dirs - 1)) * (final_value - initial_value)
+    )
 
 
 def _product_dict(input_dict: dict) -> Iterator[dict]:
@@ -70,10 +78,15 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
         yield dict(zip(keys, values, strict=True))
 
 
+def indices_iterator(n_dirs: int, n_parameters: int) -> Iterator[tuple[int, ...]]:
+    """Create an iterator for the indices of the dictionary sweep."""
+    yield from itertools.product(*(range(n_dirs),) * n_parameters)
+
+
 def create_dict_sweep(
     *,
     sweep_path: Path,
-    n_divs: int,
+    n_dirs: int,
     destructive: bool,
     copy_dir: Path,
     edit_file: str,
@@ -84,26 +97,56 @@ def create_dict_sweep(
     if destructive and sweep_path.is_dir():
         shutil.rmtree(sweep_path)
     # Uniformly spaced grids on [low, high] for each parameter
-    parameter_grids = (
-        {key: [low] for key, (low, high) in parameter_dict.items()}
-        if n_divs == 1
-        else {
-            key: [low + (i / (n_divs - 1)) * (high - low) for i in range(n_divs)]
-            for key, (low, high) in parameter_dict.items()
-        }
-    )
+    parameter_grids = {
+        key: [calculate_parameter_value(n_dirs, low, high, i) for i in range(n_dirs)]
+        for key, (low, high) in parameter_dict.items()
+    }
     # Compute Cartesian products of all parameter value combinations plus grid indices
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
-        itertools.product(*(range(n_divs),) * len(parameter_dict)),
+        indices_iterator(n_dirs, len(parameter_grids)),
         strict=True,
     ):
-        directory_name = "-".join(
-            f"{k}_{i}" for k, i in zip(parameter_values, indices, strict=True)
-        )
+        directory_name = return_directory_name(list(parameter_values.keys()), indices)
         directory_path = Path(sweep_path) / "SWEEP" / directory_name
         shutil.copytree(copy_dir, directory_path)
         edit_parameters(directory_path / edit_file, parameter_values)
+
+
+def return_directory_name(parameter_names: list[str], indices: tuple[int, ...]) -> str:
+    """Return the directory name given parameter names and indices."""
+    return "-".join(f"{k}_{i}" for k, i in zip(parameter_names, indices, strict=True))
+
+
+def list_parameter_values(conditions_file: Path, parameter_name: str) -> list[str]:
+    """Return a list of the values of a given parameter_name in conditions_file."""
+    data = ElementTree.parse(conditions_file)  # noqa: S314
+    root = data.getroot()
+    conditions = root.find("CONDITIONS")
+    if conditions is None:
+        msg = f"Failed to find CONDITIONS in the file {conditions_file}"
+        raise ValueError(msg)
+    parameters = conditions.find("PARAMETERS")
+    if parameters is None:
+        msg = (
+            "Failed to find PARAMETERS in the CONDITIONS node" f" of {conditions_file}"
+        )
+        raise ValueError(msg)
+
+    # List of matched parameter values
+    values = []
+    for element in parameters.iter("P"):
+        match = re.match(
+            r"\s*(?P<key>\w+)\s*=\s*(?P<value>-?\d*(\.?\d)+)\s*", str(element.text)
+        )
+        if match is None:
+            msg = f"Parameter definition of unexpected format: {element.text}"
+            raise ValueError(msg)
+        key = match.group("key")
+        value = str(match.group("value"))
+        if key == parameter_name:
+            values.append(value)
+    return values
 
 
 def edit_parameters(
