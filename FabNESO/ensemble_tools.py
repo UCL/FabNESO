@@ -6,7 +6,7 @@ import itertools
 import re
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 
 if TYPE_CHECKING:
@@ -78,7 +78,7 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
         yield dict(zip(keys, values, strict=True))
 
 
-def indices_iterator(n_dirs: int, n_parameters: int) -> Iterator[tuple[Any, ...]]:
+def indices_iterator(n_dirs: int, n_parameters: int) -> Iterator[tuple[int, ...]]:
     """Create an iterator for the indices of the dictionary sweep."""
     yield from itertools.product(*(range(n_dirs),) * n_parameters)
 
@@ -113,7 +113,7 @@ def create_dict_sweep(
         edit_parameters(directory_path / edit_file, parameter_values)
 
 
-def return_directory_name(parameter_values: dict, indices: tuple[Any, ...]) -> str:
+def return_directory_name(parameter_values: dict, indices: tuple[int, ...]) -> str:
     """Return the directory name given parameter names and indices."""
     return "-".join(f"{k}_{i}" for k, i in zip(parameter_values, indices, strict=True))
 
