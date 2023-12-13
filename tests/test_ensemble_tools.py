@@ -294,7 +294,7 @@ def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None
     ],
 )
 def test_return_directory_name(n_dirs: int, parameter_list: list[str]) -> None:
-    """Test the return_directory_name method."""
+    """Test the return_directory_name function."""
     directory_names = []
     # Create a dummy set of indices based on n_dirs
     for indices in indices_iterator(n_dirs, len(parameter_list)):
@@ -313,7 +313,7 @@ def test_return_directory_name(n_dirs: int, parameter_list: list[str]) -> None:
 @pytest.mark.parametrize("n_dirs", [1, 3, 7])
 @pytest.mark.parametrize("n_parameters", [1, 2, 5, 7])
 def test_indices_iterator(n_dirs: int, n_parameters: int) -> None:
-    """The the indices_iterator from the ensemble_tools."""
+    """Test the indices_iterator from the ensemble_tools."""
     indices_list = []
     for indices in indices_iterator(n_dirs, n_parameters):
         assert len(indices) == n_parameters
