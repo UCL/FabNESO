@@ -233,7 +233,7 @@ def test_create_dict_sweep(
 
     # Loop through the directories and check the conditions file
     for indices in indices_iterator(n_dirs, len(parameter_dict)):
-        directory_name = return_directory_name(parameter_dict, indices)
+        directory_name = return_directory_name(list(parameter_dict.keys()), indices)
         this_dir = sweep_path / "SWEEP" / directory_name
 
         # Check the directory exists
@@ -285,15 +285,15 @@ def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None
 @pytest.mark.parametrize(
     "parameter_list",
     [
-        {"particle_initial_velocity": [], "particle_charge_density": []},
-        {
-            "particle_initial_velocity": [],
-            "particle_charge_density": [],
-            "particle_number_density": [],
-        },
+        ["particle_initial_velocity", "particle_charge_density"],
+        [
+            "particle_initial_velocity",
+            "particle_charge_density",
+            "particle_number_density",
+        ],
     ],
 )
-def test_return_directory_name(n_dirs: int, parameter_list: dict) -> None:
+def test_return_directory_name(n_dirs: int, parameter_list: list[str]) -> None:
     """Test the return_directory_name method."""
     directory_names = []
     # Create a dummy set of indices based on n_dirs

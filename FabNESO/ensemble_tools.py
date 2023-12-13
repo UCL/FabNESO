@@ -107,15 +107,15 @@ def create_dict_sweep(
         indices_iterator(n_dirs, len(parameter_grids)),
         strict=True,
     ):
-        directory_name = return_directory_name(parameter_values, indices)
+        directory_name = return_directory_name(list(parameter_values.keys()), indices)
         directory_path = Path(sweep_path) / "SWEEP" / directory_name
         shutil.copytree(copy_dir, directory_path)
         edit_parameters(directory_path / edit_file, parameter_values)
 
 
-def return_directory_name(parameter_values: dict, indices: tuple[int, ...]) -> str:
+def return_directory_name(parameter_names: list[str], indices: tuple[int, ...]) -> str:
     """Return the directory name given parameter names and indices."""
-    return "-".join(f"{k}_{i}" for k, i in zip(parameter_values, indices, strict=True))
+    return "-".join(f"{k}_{i}" for k, i in zip(parameter_names, indices, strict=True))
 
 
 def list_parameter_values(conditions_file: Path, parameter_name: str) -> list[str]:
