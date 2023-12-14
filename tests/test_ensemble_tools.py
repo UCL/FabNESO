@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from typing import TypedDict
 
+import numpy as np
 import pytest
 
 from FabNESO.ensemble_tools import (
@@ -197,7 +198,12 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
         create_dir_tree(**argument_dict)
 
 
-@pytest.mark.parametrize("n_dirs", [1, 3, 5, 10])
+@pytest.mark.parametrize(
+    "n_dirs",
+    [
+        [1, 3, 5],
+    ],
+)
 @pytest.mark.parametrize("destructive", [True, False])
 @pytest.mark.parametrize(
     "parameter_dict",
@@ -213,26 +219,30 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
     ],
 )
 def test_create_dict_sweep(
-    tmp_path: Path, *, n_dirs: int, destructive: bool, parameter_dict: dict
+    tmp_path: Path, *, n_dirs: list[int], destructive: bool, parameter_dict: dict
 ) -> None:
     """Test the create_dict_sweep method of ensemble_tools."""
     sweep_path = tmp_path / "test"
     copy_dir = Path("config_files") / "two_stream"
     edit_file = "conditions.xml"
+    # Combine the n_dirs vector into the parameter_dict
+    useable_n_dirs = n_dirs[: len(parameter_dict)]
+    for (key, item), n_dir in zip(parameter_dict.items(), useable_n_dirs, strict=True):
+        parameter_dict[key] = item[:2] + (n_dir,)
+
     create_dict_sweep(
         sweep_path=sweep_path,
-        n_dirs=n_dirs,
         destructive=destructive,
         copy_dir=copy_dir,
         edit_file=edit_file,
         parameter_dict=parameter_dict,
     )
-    n_total_directories = n_dirs ** len(parameter_dict)
+    n_total_directories = np.prod(n_dirs[: len(parameter_dict)])
     # Check we make the corect number of directories
     assert len(list((sweep_path / "SWEEP").iterdir())) == n_total_directories
 
     # Loop through the directories and check the conditions file
-    for indices in indices_iterator(n_dirs, len(parameter_dict)):
+    for indices in indices_iterator(n_dirs[: len(parameter_dict)]):
         directory_name = return_directory_name(list(parameter_dict.keys()), indices)
         this_dir = sweep_path / "SWEEP" / directory_name
 
@@ -248,7 +258,7 @@ def test_create_dict_sweep(
             parameter = list(parameter_dict.keys())[i]
             scan_range = parameter_dict[parameter]
             para_value = calculate_parameter_value(
-                n_dirs, scan_range[0], scan_range[1], indices[i]
+                scan_range[2], scan_range[0], scan_range[1], indices[i]
             )
             n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
@@ -281,7 +291,14 @@ def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None
         assert min(scan_range) <= value <= max(scan_range)
 
 
-@pytest.mark.parametrize("n_dirs", [1, 3, 100])
+@pytest.mark.parametrize(
+    "n_dirs",
+    [
+        [1, 3, 100],
+        [20, 20, 20],
+        [50, 2, 1],
+    ],
+)
 @pytest.mark.parametrize(
     "parameter_list",
     [
@@ -293,31 +310,38 @@ def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None
         ],
     ],
 )
-def test_return_directory_name(n_dirs: int, parameter_list: list[str]) -> None:
+def test_return_directory_name(n_dirs: list[int], parameter_list: list[str]) -> None:
     """Test the return_directory_name function."""
     directory_names = []
     # Create a dummy set of indices based on n_dirs
-    for indices in indices_iterator(n_dirs, len(parameter_list)):
+    for indices in indices_iterator(n_dirs[: len(parameter_list)]):
         dir_name = return_directory_name(parameter_list, indices)
         # Check that each parameter only appears once in the directory name
         for parameter in parameter_list:
             assert dir_name.count(parameter) == 1
         directory_names.append(dir_name)
     # Check we've made the correct number of directories
-    assert len(directory_names) == n_dirs ** len(parameter_list)
+    assert len(directory_names) == np.prod(n_dirs[: len(parameter_list)])
     # Check that we've made unique directories
     n_unique_dirs = len(set(directory_names))
     assert len(directory_names) == n_unique_dirs
 
 
-@pytest.mark.parametrize("n_dirs", [1, 3, 7])
-@pytest.mark.parametrize("n_parameters", [1, 2, 5, 7])
-def test_indices_iterator(n_dirs: int, n_parameters: int) -> None:
+@pytest.mark.parametrize(
+    "n_dirs",
+    [
+        [1, 3, 7],
+        [2, 5, 10],
+        [1],
+        [4, 6, 9, 1, 5, 4],
+    ],
+)
+def test_indices_iterator(n_dirs: list[int]) -> None:
     """Test the indices_iterator from the ensemble_tools."""
     indices_list = []
-    for indices in indices_iterator(n_dirs, n_parameters):
-        assert len(indices) == n_parameters
+    for indices in indices_iterator(n_dirs):
+        assert len(indices) == len(n_dirs)
         indices_list.append(indices)
-    assert len(indices_list) == n_dirs**n_parameters
+    assert len(indices_list) == np.prod(n_dirs)
     n_unique_indices = len(set(indices_list))
     assert n_unique_indices == len(indices_list)

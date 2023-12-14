@@ -78,19 +78,18 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
         yield dict(zip(keys, values, strict=True))
 
 
-def indices_iterator(n_dirs: int, n_parameters: int) -> Iterator[tuple[int, ...]]:
+def indices_iterator(n_dirs: list[int]) -> Iterator[tuple[int, ...]]:
     """Create an iterator for the indices of the dictionary sweep."""
-    yield from itertools.product(*(range(n_dirs),) * n_parameters)
+    yield from itertools.product(*[range(n_dir) for n_dir in n_dirs])
 
 
 def create_dict_sweep(
     *,
     sweep_path: Path,
-    n_dirs: int,
     destructive: bool,
     copy_dir: Path,
     edit_file: str,
-    parameter_dict: dict[str, tuple[float, float]],
+    parameter_dict: dict[str, tuple[float, float, int]],
 ) -> None:
     """Use a dictionary with each parameter interval to create a sweep directory."""
     # If destructive, delete the whole tree if it already exists
@@ -98,13 +97,17 @@ def create_dict_sweep(
         shutil.rmtree(sweep_path)
     # Uniformly spaced grids on [low, high] for each parameter
     parameter_grids = {
-        key: [calculate_parameter_value(n_dirs, low, high, i) for i in range(n_dirs)]
-        for key, (low, high) in parameter_dict.items()
+        key: [
+            calculate_parameter_value(n_dir_parameter, low, high, i)
+            for i in range(n_dir_parameter)
+        ]
+        for key, (low, high, n_dir_parameter) in parameter_dict.items()
     }
     # Compute Cartesian products of all parameter value combinations plus grid indices
+    [n_dir[2] for n_dir in parameter_dict.values()]
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
-        indices_iterator(n_dirs, len(parameter_grids)),
+        indices_iterator([n_dirs[2] for n_dirs in parameter_dict.values()]),
         strict=True,
     ):
         directory_name = return_directory_name(list(parameter_values.keys()), indices)
