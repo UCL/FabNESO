@@ -15,7 +15,7 @@ except ImportError:
     from base import fab
 
 
-from .ensemble_tools import edit_parameters
+from .ensemble_tools import create_dict_sweep, edit_parameters
 
 fab.add_local_paths("FabNESO")
 
@@ -81,6 +81,7 @@ def neso_ensemble(
     solver: str = "Electrostatic2D3V",
     conditions_file_name: str = "conditions.xml",
     mesh_file_name: str = "mesh.xml",
+    **parameter_scans: str,
 ) -> None:
     """
     Run ensemble of NESO solver instances.
@@ -90,16 +91,47 @@ def neso_ensemble(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
+        parameter_scans is a set of parameters to sweep over. A slash separated list of
+        lower bound, upper bound, and steps.
     """
-    path_to_config = fab.find_config_file_path(config)
-    sweep_dir = str(Path(path_to_config) / "SWEEP")
-    fab.update_environment(
-        {
-            "script": "neso",
-            "neso_solver": solver,
-            "neso_conditions_file": conditions_file_name,
-            "neso_mesh_file": mesh_file_name,
-        }
+    path_to_config = Path(fab.find_config_file_path(config))
+    temporary_context: TemporaryDirectory | nullcontext = (
+        TemporaryDirectory(prefix=f"{config}_", dir=path_to_config.parent)
+        if parameter_scans != {}
+        else nullcontext()
     )
-    fab.with_config(config)
-    fab.run_ensemble(config, sweep_dir)
+    with temporary_context as temporary_config_directory:
+        if parameter_scans != {}:
+            temporary_config_path = Path(temporary_config_directory)
+            # Because FabSIM is a bit weird with commas, build the dict here
+            parameter_scan_dict = {
+                parameter: (
+                    float(values.split("/")[0]),
+                    float(values.split("/")[1]),
+                    int(values.split("/")[2]),
+                )
+                for parameter, values in parameter_scans.items()
+            }
+            create_dict_sweep(
+                sweep_path=temporary_config_path,
+                destructive=False,
+                copy_dir=path_to_config,
+                edit_file=conditions_file_name,
+                parameter_dict=parameter_scan_dict,
+            )
+
+            # switch our config to the new tmp ones
+            config = temporary_config_path.name
+            path_to_config = temporary_config_path
+
+        sweep_dir = str(path_to_config / "SWEEP")
+        fab.update_environment(
+            {
+                "script": "neso",
+                "neso_solver": solver,
+                "neso_conditions_file": conditions_file_name,
+                "neso_mesh_file": mesh_file_name,
+            }
+        )
+        fab.with_config(config)
+        fab.run_ensemble(config, sweep_dir)
