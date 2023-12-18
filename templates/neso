@@ -1,10 +1,9 @@
-
 cd $job_results
 $run_prefix
 
+cat << ENDOFMESSAGE
+Running NESO solver $neso_solver from $neso_bin_dir in directory $job_results
+with conditions file $neso_conditions_file and mesh file $neso_mesh_file
+ENDOFMESSAGE
 
-echo "Running NESO solver $neso_solver"
-
-echo ${neso_bin_dir}$neso_solver $neso_conditions_file $neso_mesh_file
-
-${neso_bin_dir}$neso_solver $neso_conditions_file $neso_mesh_file
+$run_command $neso_bin_dir/$neso_solver $neso_conditions_file $neso_mesh_file
