@@ -1,6 +1,9 @@
 cd $job_results
 $run_prefix
 
+# Disable OpenMP threading to avoid over subscription when parallelising using MPI
+export OMP_NUM_THREADS=1
+
 cat << ENDOFMESSAGE
 Running NESO solver $neso_solver from $neso_bin_dir in directory $job_results
 with conditions file $neso_conditions_file and mesh file $neso_mesh_file
