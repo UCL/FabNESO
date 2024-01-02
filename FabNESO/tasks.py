@@ -74,6 +74,14 @@ def neso(
         )
 
 
+def _parse_parameter_scan_string(
+    parameter_scan_string: str,
+    delimiter: str,
+) -> tuple[float, float, int]:
+    start, end, n_steps = parameter_scan_string.split(delimiter)
+    return float(start), float(end), int(n_steps)
+
+
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso_ensemble(
@@ -91,8 +99,8 @@ def neso_ensemble(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
-        parameter_scans is a set of parameters to sweep over. A slash separated list of
-        lower bound, upper bound, and steps.
+        **parameter_scans: The set of parameters to sweep over. A slash separated list
+        of lower bound, upper bound, and steps.
     """
     path_to_config = Path(fab.find_config_file_path(config))
     temporary_context: TemporaryDirectory | nullcontext = (
@@ -105,11 +113,7 @@ def neso_ensemble(
             temporary_config_path = Path(temporary_config_directory)
             # Because FabSIM is a bit weird with commas, build the dict here
             parameter_scan_dict = {
-                parameter: (
-                    float(values.split("/")[0]),
-                    float(values.split("/")[1]),
-                    int(values.split("/")[2]),
-                )
+                parameter: (_parse_parameter_scan_string(values, ":"))
                 for parameter, values in parameter_scans.items()
             }
             create_dict_sweep(

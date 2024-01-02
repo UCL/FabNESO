@@ -1,10 +1,11 @@
 """Tests for the ensemble_tools utilities."""
 
 import shutil
+from functools import reduce
+from operator import mul
 from pathlib import Path
 from typing import TypedDict
 
-import numpy as np
 import pytest
 
 from FabNESO.ensemble_tools import (
@@ -237,7 +238,7 @@ def test_create_dict_sweep(
         edit_file=edit_file,
         parameter_dict=parameter_dict,
     )
-    n_total_directories = np.prod(n_dirs[: len(parameter_dict)])
+    n_total_directories = reduce(mul, n_dirs[: len(parameter_dict)])
     # Check we make the corect number of directories
     assert len(list((sweep_path / "SWEEP").iterdir())) == n_total_directories
 
@@ -256,10 +257,8 @@ def test_create_dict_sweep(
         # Check that the parameters have been edited correctly
         for i in range(len(parameter_dict)):
             parameter = list(parameter_dict.keys())[i]
-            scan_range = parameter_dict[parameter]
-            para_value = calculate_parameter_value(
-                scan_range[2], scan_range[0], scan_range[1], indices[i]
-            )
+            low, high, n_steps = parameter_dict[parameter]
+            para_value = calculate_parameter_value(n_steps, low, high, indices[i])
             n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
             )
@@ -321,7 +320,7 @@ def test_return_directory_name(n_dirs: list[int], parameter_list: list[str]) -> 
             assert dir_name.count(parameter) == 1
         directory_names.append(dir_name)
     # Check we've made the correct number of directories
-    assert len(directory_names) == np.prod(n_dirs[: len(parameter_list)])
+    assert len(directory_names) == reduce(mul, n_dirs[: len(parameter_list)])
     # Check that we've made unique directories
     n_unique_dirs = len(set(directory_names))
     assert len(directory_names) == n_unique_dirs
@@ -342,6 +341,6 @@ def test_indices_iterator(n_dirs: list[int]) -> None:
     for indices in indices_iterator(n_dirs):
         assert len(indices) == len(n_dirs)
         indices_list.append(indices)
-    assert len(indices_list) == np.prod(n_dirs)
+    assert len(indices_list) == reduce(mul, n_dirs)
     n_unique_indices = len(set(indices_list))
     assert n_unique_indices == len(indices_list)

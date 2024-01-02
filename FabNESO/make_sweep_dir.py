@@ -4,7 +4,7 @@ import argparse
 from ast import literal_eval
 from pathlib import Path
 
-from FabNESO.ensemble_tools import create_dict_sweep, create_dir_tree
+from .ensemble_tools import create_dict_sweep, create_dir_tree
 
 
 def main() -> None:
@@ -72,7 +72,7 @@ def main() -> None:
             raise ValueError(msg)
         # If we define n_dirs in the command line argument, override any
         # dict parameters we didn't assign n_dirs to
-        for _parameter, values in parameter_dict.items():
+        for values in parameter_dict.values():
             if len(values) < 3:  # noqa: PLR2004
                 values.append(args.n_dirs)
         # Use the dict to create a sweep directory

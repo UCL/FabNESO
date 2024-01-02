@@ -104,10 +104,9 @@ def create_dict_sweep(
         for key, (low, high, n_dir_parameter) in parameter_dict.items()
     }
     # Compute Cartesian products of all parameter value combinations plus grid indices
-    [n_dir[2] for n_dir in parameter_dict.values()]
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
-        indices_iterator([n_dirs[2] for n_dirs in parameter_dict.values()]),
+        indices_iterator([n_dir for *_, n_dir in parameter_dict.values()]),
         strict=True,
     ):
         directory_name = return_directory_name(list(parameter_values.keys()), indices)
