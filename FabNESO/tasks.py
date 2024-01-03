@@ -99,7 +99,7 @@ def neso_ensemble(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
-        **parameter_scans: The set of parameters to sweep over. A slash separated list
+        **parameter_scans: The set of parameters to sweep over. A colon separated list
         of lower bound, upper bound, and steps.
     """
     path_to_config = Path(fab.find_config_file_path(config))
@@ -113,7 +113,7 @@ def neso_ensemble(
             temporary_config_path = Path(temporary_config_directory)
             # Because FabSIM is a bit weird with commas, build the dict here
             parameter_scan_dict = {
-                parameter: (_parse_parameter_scan_string(values, ":"))
+                parameter: _parse_parameter_scan_string(values, ":")
                 for parameter, values in parameter_scans.items()
             }
             create_dict_sweep(
