@@ -16,7 +16,7 @@ except ImportError:
     from base import fab
 
 
-from .ensemble_tools import edit_parameters
+from .ensemble_tools import create_dict_sweep, edit_parameters
 
 fab.add_local_paths("FabNESO")
 
@@ -156,6 +156,14 @@ def neso(
         )
 
 
+def _parse_parameter_scan_string(
+    parameter_scan_string: str,
+    delimiter: str,
+) -> tuple[float, float, int]:
+    start, end, n_steps = parameter_scan_string.split(delimiter)
+    return float(start), float(end), int(n_steps)
+
+
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso_ensemble(
@@ -167,6 +175,7 @@ def neso_ensemble(
     nodes: int = 1,
     cpus_per_process: int = 1,
     wall_time: str = "00:15:00",
+    **parameter_scans: str,
 ) -> None:
     """
     Run ensemble of NESO solver instances.
@@ -183,22 +192,49 @@ def neso_ensemble(
             ensemble. Only applicable when running on a multi-node system.
         wall_time: Maximum time to allow each job in ensemble to run for. Only
             applicable when submitting to a job scheduler.
+        **parameter_scans: The set of parameters to sweep over. A colon separated list
+            of lower bound, upper bound, and steps.
     """
     processes, nodes, cpus_per_process, wall_time = _check_and_process_resource_args(
         processes, nodes, cpus_per_process, wall_time
     )
-    path_to_config = fab.find_config_file_path(config)
-    sweep_dir = str(Path(path_to_config) / "SWEEP")
-    fab.update_environment(
-        _create_job_args_dict(
-            solver,
-            conditions_file_name,
-            mesh_file_name,
-            processes,
-            nodes,
-            cpus_per_process,
-            wall_time,
-        )
+    path_to_config = Path(fab.find_config_file_path(config))
+    temporary_context: TemporaryDirectory | nullcontext = (
+        TemporaryDirectory(prefix=f"{config}_", dir=path_to_config.parent)
+        if parameter_scans != {}
+        else nullcontext()
     )
-    fab.with_config(config)
-    fab.run_ensemble(config, sweep_dir)
+    with temporary_context as temporary_config_directory:
+        if parameter_scans != {}:
+            temporary_config_path = Path(temporary_config_directory)
+            # Because FabSIM is a bit weird with commas, build the dict here
+            parameter_scan_dict = {
+                parameter: _parse_parameter_scan_string(values, ":")
+                for parameter, values in parameter_scans.items()
+            }
+            create_dict_sweep(
+                sweep_path=temporary_config_path,
+                destructive=False,
+                copy_dir=path_to_config,
+                edit_file=conditions_file_name,
+                parameter_dict=parameter_scan_dict,
+            )
+
+            # switch our config to the new tmp ones
+            config = temporary_config_path.name
+            path_to_config = temporary_config_path
+
+        sweep_dir = str(path_to_config / "SWEEP")
+        fab.update_environment(
+            _create_job_args_dict(
+                solver,
+                conditions_file_name,
+                mesh_file_name,
+                processes,
+                nodes,
+                cpus_per_process,
+                wall_time,
+            )
+        )
+        fab.with_config(config)
+        fab.run_ensemble(config, sweep_dir)
