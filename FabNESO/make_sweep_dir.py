@@ -70,10 +70,14 @@ def main() -> None:
         if not isinstance(parameter_dict, dict):
             msg = "Did not receive a dict as input for parameter_dict"
             raise ValueError(msg)
+        # If we define n_dirs in the command line argument, override any
+        # dict parameters we didn't assign n_dirs to
+        for values in parameter_dict.values():
+            if len(values) < 3:  # noqa: PLR2004
+                values.append(args.n_dirs)
         # Use the dict to create a sweep directory
         create_dict_sweep(
             sweep_path=args.sweep_path,
-            n_dirs=args.n_dirs,
             destructive=args.destructive,
             copy_dir=args.copy_dir,
             edit_file=args.edit_file,
