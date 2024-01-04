@@ -106,7 +106,7 @@ def neso(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
-        processes: Number of processes to run on.
+        processes: Number of processes to run.
         nodes: Number of nodes to run on. Only applicable when running on a multi-node
             system.
         cpus_per_process: Number of processing units to use per process. Only
