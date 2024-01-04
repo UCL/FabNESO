@@ -10,4 +10,4 @@ default:
 
 localhost:
   neso_bin_dir: "change-me" # path to directory containing built NESO solver executables
-  run_command: "OMP_NUM_THREADS=1 mpirun -n $cores -map-by core -bind-to hwthread"
+  run_command: "mpirun -n $cores -map-by core -bind-to hwthread"
