@@ -25,7 +25,7 @@ def _try_convert_to_int_and_check_positive(value: str | int, name: str) -> int:
     try:
         value = int(value)
     except ValueError as e:
-        msg = f"{name} is not a valid an integer literal: {value}"
+        msg = f"{name} is not a valid integer literal: {value}"
         raise ValueError(msg) from e
     if value <= 0:
         msg = f"{name} must be a positive integer: {value}"
@@ -185,7 +185,7 @@ def neso_ensemble(
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
-        processes: Number of processes to run each job in ensemble on.
+        processes: Number of processes to run in each job in the ensemble.
         nodes: Number of nodes to run each job in ensemble on. Only applicable when
             running on a multi-node system.
         cpus_per_process: Number of processing units to use per process for each job in
