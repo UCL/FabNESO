@@ -1,11 +1,13 @@
-# This is the user personal configuration for job submission and execution for FabNESO plugin
-# All given variables here will be override machine settings loaded from (a) FabSim3/deploy/machines.yml and (b) FabSim3/deploy/machines_user.yml
+# This is the user configuration for job submission and execution for the FabNESO plugin
+# All given variables here will be override machine settings loaded from
+# (a) FabSim3/deploy/machines.yml and (b) FabSim3/deploy/machines_user.yml
 #
 # Here, you can find some examples for pre-defined remote machines
-# All env variable can be modified here and will overwrite setting in machines.yml and machines_user.yml
+# All env variable can be modified here and will overwrite setting in
+# machines.yml and machines_user.yml
 
 default:
 
 localhost:
-  # location of NESO on your local PC
-  neso_bin_dir: "<..>"
+  neso_bin_dir: "change-me" # path to directory containing built NESO solver executables
+  run_command: "mpirun -n $cores -map-by core -bind-to hwthread"
