@@ -1,0 +1,17 @@
+FabNESO package
+===============
+
+.. automodule:: FabNESO
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   FabNESO.ensemble_tools
+   FabNESO.make_sweep_dir
+   FabNESO.tasks

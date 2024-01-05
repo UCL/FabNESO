@@ -1,0 +1,7 @@
+FabNESO.make\_sweep\_dir module
+===============================
+
+.. automodule:: FabNESO.make_sweep_dir
+   :members:
+   :undoc-members:
+   :show-inheritance:

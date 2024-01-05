@@ -1,0 +1,7 @@
+FabNESO.tasks module
+====================
+
+.. automodule:: FabNESO.tasks
+   :members:
+   :undoc-members:
+   :show-inheritance:

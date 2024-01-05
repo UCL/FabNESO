@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FabNESO.tasks &mdash; FabNESO 0.1.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=6aee1ebc"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            FabNESO
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../FabNESO.html">FabNESO package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">FabNESO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FabNESO.tasks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FabNESO.tasks</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Task definitions for FabNESO plug-in to FabSIM software toolkit.</span>
+
+<span class="sd">Defines tasks for running simulations using Neptune Exploratory Software (NESO).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">nullcontext</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">TemporaryDirectory</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">fabsim.base</span> <span class="kn">import</span> <span class="n">fab</span>
+
+    <span class="n">fab</span><span class="o">.</span><span class="n">add_local_paths</span><span class="p">(</span><span class="s2">&quot;FabNESO&quot;</span><span class="p">)</span>
+    <span class="n">FAB_IMPORTED</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c1"># If FabSim not installed we create a dummy fab namespace definining placeholder</span>
+    <span class="c1"># decorators to make module still importable, for example when building docs</span>
+    <span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">SimpleNamespace</span>
+
+    <span class="n">fab</span> <span class="o">=</span> <span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="p">,</span> <span class="n">load_plugin_env_vars</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">FAB_IMPORTED</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="kn">from</span> <span class="nn">.ensemble_tools</span> <span class="kn">import</span> <span class="n">create_dict_sweep</span><span class="p">,</span> <span class="n">edit_parameters</span>
+
+
+<span class="k">def</span> <span class="nf">_check_fab_module_imported</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">FAB_IMPORTED</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;fabsim.base.fab could not be imported - check FabSim3 is installed&quot;</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_try_convert_to_int_and_check_positive</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not a valid integer literal: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a positive integer: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span> <span class="nf">_check_and_process_resource_args</span><span class="p">(</span>
+    <span class="n">processes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">cpus_per_process</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">wall_time</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">processes</span> <span class="o">=</span> <span class="n">_try_convert_to_int_and_check_positive</span><span class="p">(</span><span class="n">processes</span><span class="p">,</span> <span class="s2">&quot;processes&quot;</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">_try_convert_to_int_and_check_positive</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
+    <span class="n">cpus_per_process</span> <span class="o">=</span> <span class="n">_try_convert_to_int_and_check_positive</span><span class="p">(</span>
+        <span class="n">cpus_per_process</span><span class="p">,</span> <span class="s2">&quot;cpus_per_process&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">processes</span> <span class="o">%</span> <span class="n">nodes</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;processes must be a multiple of nodes&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">wall_time</span> <span class="o">=</span> <span class="n">wall_time</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\d{1,2}:(?P&lt;minutes&gt;\d{1,2}):(?P&lt;seconds&gt;\d{1,2})$&quot;</span><span class="p">,</span> <span class="n">wall_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;wall_time should be of format hh:mm:ss&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">minutes_in_hour</span> <span class="o">=</span> <span class="n">seconds_in_minute</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;minutes&quot;</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">minutes_in_hour</span>
+        <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;seconds&quot;</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">seconds_in_minute</span>
+    <span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;wall_time minute and second components should be in range 0 to 59&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span>
+
+
+<span class="k">def</span> <span class="nf">_create_job_args_dict</span><span class="p">(</span>
+    <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">conditions_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">mesh_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">processes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">cpus_per_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">wall_time</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;script&quot;</span><span class="p">:</span> <span class="s2">&quot;neso&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;neso_solver&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="p">,</span>
+        <span class="s2">&quot;neso_conditions_file&quot;</span><span class="p">:</span> <span class="n">conditions_file_name</span><span class="p">,</span>
+        <span class="s2">&quot;neso_mesh_file&quot;</span><span class="p">:</span> <span class="n">mesh_file_name</span><span class="p">,</span>
+        <span class="c1"># FabSim convention is to use &#39;cores&#39; to set number of MPI processes</span>
+        <span class="s2">&quot;cores&quot;</span><span class="p">:</span> <span class="n">processes</span><span class="p">,</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="n">nodes</span><span class="p">,</span>
+        <span class="s2">&quot;corespernode&quot;</span><span class="p">:</span> <span class="n">processes</span> <span class="o">//</span> <span class="n">nodes</span><span class="p">,</span>
+        <span class="s2">&quot;cpuspertask&quot;</span><span class="p">:</span> <span class="n">cpus_per_process</span><span class="p">,</span>
+        <span class="s2">&quot;job_wall_time&quot;</span><span class="p">:</span> <span class="n">wall_time</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="neso">
+<a class="viewcode-back" href="../../FabNESO.tasks.html#FabNESO.neso">[docs]</a>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">task</span>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">load_plugin_env_vars</span><span class="p">(</span><span class="s2">&quot;FabNESO&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">neso</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Electrostatic2D3V&quot;</span><span class="p">,</span>
+    <span class="n">conditions_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;conditions.xml&quot;</span><span class="p">,</span>
+    <span class="n">mesh_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mesh.xml&quot;</span><span class="p">,</span>
+    <span class="n">processes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">cpus_per_process</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">wall_time</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;00:15:00&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">parameter_overrides</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run a single NESO solver instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: Directory with single run configuration information.</span>
+<span class="sd">        solver: Which NESO solver to use.</span>
+<span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
+<span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>
+<span class="sd">        processes: Number of processes to run.</span>
+<span class="sd">        nodes: Number of nodes to run on. Only applicable when running on a multi-node</span>
+<span class="sd">            system.</span>
+<span class="sd">        cpus_per_process: Number of processing units to use per process. Only</span>
+<span class="sd">            applicable when running on a multi-node system.</span>
+<span class="sd">        wall_time: Maximum time to allow job to run for. Only applicable when submitting</span>
+<span class="sd">            to a job scheduler.</span>
+<span class="sd">        **parameter_overrides: Additional keyword arguments will be passed to</span>
+<span class="sd">            ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions</span>
+<span class="sd">            file with these parameter vaues overriden.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_fab_module_imported</span><span class="p">()</span>
+    <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span> <span class="o">=</span> <span class="n">_check_and_process_resource_args</span><span class="p">(</span>
+        <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span>
+    <span class="p">)</span>
+    <span class="c1"># Use a temporary directory context so that we can handle parameter inputs</span>
+    <span class="c1"># from the command line</span>
+    <span class="n">original_config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">find_config_file_path</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+    <span class="n">temporary_context</span><span class="p">:</span> <span class="n">TemporaryDirectory</span> <span class="o">|</span> <span class="n">nullcontext</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">original_config_path</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parameter_overrides</span> <span class="o">!=</span> <span class="p">{}</span>
+        <span class="k">else</span> <span class="n">nullcontext</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">with</span> <span class="n">temporary_context</span> <span class="k">as</span> <span class="n">temporary_config_directory</span><span class="p">:</span>
+        <span class="c1"># If there have been additional parameters provided, create a copy of the</span>
+        <span class="c1"># conditions file and edit the input parameters</span>
+        <span class="k">if</span> <span class="n">parameter_overrides</span> <span class="o">!=</span> <span class="p">{}:</span>
+            <span class="n">temporary_config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temporary_config_directory</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span>
+                <span class="n">original_config_path</span><span class="p">,</span> <span class="n">temporary_config_path</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">temporary_config_path</span><span class="o">.</span><span class="n">name</span>  <span class="c1"># switch our config to the new tmp ones</span>
+            <span class="n">edit_parameters</span><span class="p">(</span>
+                <span class="n">temporary_config_path</span> <span class="o">/</span> <span class="n">conditions_file_name</span><span class="p">,</span> <span class="n">parameter_overrides</span>
+            <span class="p">)</span>
+
+        <span class="n">fab</span><span class="o">.</span><span class="n">with_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">put_configs</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">job</span><span class="p">(</span>
+            <span class="n">_create_job_args_dict</span><span class="p">(</span>
+                <span class="n">solver</span><span class="p">,</span>
+                <span class="n">conditions_file_name</span><span class="p">,</span>
+                <span class="n">mesh_file_name</span><span class="p">,</span>
+                <span class="n">processes</span><span class="p">,</span>
+                <span class="n">nodes</span><span class="p">,</span>
+                <span class="n">cpus_per_process</span><span class="p">,</span>
+                <span class="n">wall_time</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_parse_parameter_scan_string</span><span class="p">(</span>
+    <span class="n">parameter_scan_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">n_steps</span> <span class="o">=</span> <span class="n">parameter_scan_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">end</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_steps</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="neso_ensemble">
+<a class="viewcode-back" href="../../FabNESO.tasks.html#FabNESO.neso_ensemble">[docs]</a>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">task</span>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">load_plugin_env_vars</span><span class="p">(</span><span class="s2">&quot;FabNESO&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">neso_ensemble</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Electrostatic2D3V&quot;</span><span class="p">,</span>
+    <span class="n">conditions_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;conditions.xml&quot;</span><span class="p">,</span>
+    <span class="n">mesh_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mesh.xml&quot;</span><span class="p">,</span>
+    <span class="n">processes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">cpus_per_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">wall_time</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;00:15:00&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">parameter_scans</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run ensemble of NESO solver instances.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: Directory with ensemble configuration information.</span>
+<span class="sd">        solver: Which NESO solver to use.</span>
+<span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
+<span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>
+<span class="sd">        processes: Number of processes to run in each job in the ensemble.</span>
+<span class="sd">        nodes: Number of nodes to run each job in ensemble on. Only applicable when</span>
+<span class="sd">            running on a multi-node system.</span>
+<span class="sd">        cpus_per_process: Number of processing units to use per process for each job in</span>
+<span class="sd">            ensemble. Only applicable when running on a multi-node system.</span>
+<span class="sd">        wall_time: Maximum time to allow each job in ensemble to run for. Only</span>
+<span class="sd">            applicable when submitting to a job scheduler.</span>
+<span class="sd">        **parameter_scans: The set of parameters to sweep over. A colon separated list</span>
+<span class="sd">            of lower bound, upper bound, and steps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_fab_module_imported</span><span class="p">()</span>
+    <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span> <span class="o">=</span> <span class="n">_check_and_process_resource_args</span><span class="p">(</span>
+        <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span>
+    <span class="p">)</span>
+    <span class="n">path_to_config</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">find_config_file_path</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+    <span class="n">temporary_context</span><span class="p">:</span> <span class="n">TemporaryDirectory</span> <span class="o">|</span> <span class="n">nullcontext</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">path_to_config</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parameter_scans</span> <span class="o">!=</span> <span class="p">{}</span>
+        <span class="k">else</span> <span class="n">nullcontext</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">with</span> <span class="n">temporary_context</span> <span class="k">as</span> <span class="n">temporary_config_directory</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">parameter_scans</span> <span class="o">!=</span> <span class="p">{}:</span>
+            <span class="n">temporary_config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temporary_config_directory</span><span class="p">)</span>
+            <span class="c1"># Because FabSIM is a bit weird with commas, build the dict here</span>
+            <span class="n">parameter_scan_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">parameter</span><span class="p">:</span> <span class="n">_parse_parameter_scan_string</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">parameter_scans</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">create_dict_sweep</span><span class="p">(</span>
+                <span class="n">sweep_path</span><span class="o">=</span><span class="n">temporary_config_path</span><span class="p">,</span>
+                <span class="n">destructive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">copy_dir</span><span class="o">=</span><span class="n">path_to_config</span><span class="p">,</span>
+                <span class="n">edit_file</span><span class="o">=</span><span class="n">conditions_file_name</span><span class="p">,</span>
+                <span class="n">parameter_dict</span><span class="o">=</span><span class="n">parameter_scan_dict</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># switch our config to the new tmp ones</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">temporary_config_path</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">path_to_config</span> <span class="o">=</span> <span class="n">temporary_config_path</span>
+
+        <span class="n">sweep_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_to_config</span> <span class="o">/</span> <span class="s2">&quot;SWEEP&quot;</span><span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">update_environment</span><span class="p">(</span>
+            <span class="n">_create_job_args_dict</span><span class="p">(</span>
+                <span class="n">solver</span><span class="p">,</span>
+                <span class="n">conditions_file_name</span><span class="p">,</span>
+                <span class="n">mesh_file_name</span><span class="p">,</span>
+                <span class="n">processes</span><span class="p">,</span>
+                <span class="n">nodes</span><span class="p">,</span>
+                <span class="n">cpus_per_process</span><span class="p">,</span>
+                <span class="n">wall_time</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">with_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">run_ensemble</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">sweep_dir</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, University College London.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

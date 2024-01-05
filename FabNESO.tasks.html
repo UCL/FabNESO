@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FabNESO.tasks module &mdash; FabNESO 0.1.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=6aee1ebc"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="FabNESO.make_sweep_dir module" href="FabNESO.make_sweep_dir.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FabNESO
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="FabNESO.html">FabNESO package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso"><code class="docutils literal notranslate"><span class="pre">neso()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_ensemble()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="FabNESO.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="FabNESO.ensemble_tools.html">FabNESO.ensemble_tools module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FabNESO.make_sweep_dir.html">FabNESO.make_sweep_dir module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">FabNESO.tasks module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FabNESO.tasks.neso"><code class="docutils literal notranslate"><span class="pre">neso()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FabNESO.tasks.neso_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_ensemble()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FabNESO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="FabNESO.html">FabNESO package</a></li>
+      <li class="breadcrumb-item active">FabNESO.tasks module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/FabNESO.tasks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-FabNESO.tasks">
+<span id="fabneso-tasks-module"></span><h1>FabNESO.tasks module<a class="headerlink" href="#module-FabNESO.tasks" title="Link to this heading"></a></h1>
+<p>Task definitions for FabNESO plug-in to FabSIM software toolkit.</p>
+<p>Defines tasks for running simulations using Neptune Exploratory Software (NESO).</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="FabNESO.tasks.neso">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.tasks.</span></span><span class="sig-name descname"><span class="pre">neso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Electrostatic2D3V'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conditions.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mesh.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus_per_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wall_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'00:15:00'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">parameter_overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/tasks.html#neso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.tasks.neso" title="Link to this definition"></a></dt>
+<dd><p>Run a single NESO solver instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Directory with single run configuration information.</p></li>
+<li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
+<li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
+<li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
+<li><p><strong>processes</strong> – Number of processes to run.</p></li>
+<li><p><strong>nodes</strong> – Number of nodes to run on. Only applicable when running on a multi-node
+system.</p></li>
+<li><p><strong>cpus_per_process</strong> – Number of processing units to use per process. Only
+applicable when running on a multi-node system.</p></li>
+<li><p><strong>wall_time</strong> – Maximum time to allow job to run for. Only applicable when submitting
+to a job scheduler.</p></li>
+<li><p><strong>**parameter_overrides</strong> – Additional keyword arguments will be passed to
+<code class="docutils literal notranslate"><span class="pre">FabNESO.ensemble_tools.edit_parameters</span></code> to create a temporary conditions
+file with these parameter vaues overriden.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="FabNESO.tasks.neso_ensemble">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.tasks.</span></span><span class="sig-name descname"><span class="pre">neso_ensemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Electrostatic2D3V'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conditions.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mesh.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus_per_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wall_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'00:15:00'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">parameter_scans</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/tasks.html#neso_ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.tasks.neso_ensemble" title="Link to this definition"></a></dt>
+<dd><p>Run ensemble of NESO solver instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Directory with ensemble configuration information.</p></li>
+<li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
+<li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
+<li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
+<li><p><strong>processes</strong> – Number of processes to run in each job in the ensemble.</p></li>
+<li><p><strong>nodes</strong> – Number of nodes to run each job in ensemble on. Only applicable when
+running on a multi-node system.</p></li>
+<li><p><strong>cpus_per_process</strong> – Number of processing units to use per process for each job in
+ensemble. Only applicable when running on a multi-node system.</p></li>
+<li><p><strong>wall_time</strong> – Maximum time to allow each job in ensemble to run for. Only
+applicable when submitting to a job scheduler.</p></li>
+<li><p><strong>**parameter_scans</strong> – The set of parameters to sweep over. A colon separated list
+of lower bound, upper bound, and steps.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="FabNESO.make_sweep_dir.html" class="btn btn-neutral float-left" title="FabNESO.make_sweep_dir module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, University College London.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
