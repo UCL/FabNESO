@@ -1,7 +1,7 @@
 # FabNESO
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Tests](https://github.com/UCL/FabNESO/actions/workflows/Tests.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/Tests.yml)
+[![Tests](https://github.com/UCL/FabNESO/actions/workflows/tests.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/tests.yml)
 [![Linting](https://github.com/UCL/FabNESO/actions/workflows/linting.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/linting.yml)
 [![Documentation](https://github.com/UCL/FabNESO/actions/workflows/docs.yml/badge.svg)](https://github-pages.ucl.ac.uk/FabNESO/)
 [![Licence](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](./LICENCE)
