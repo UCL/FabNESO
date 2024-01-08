@@ -16,8 +16,16 @@ import pyvbmc
 
 try:
     from fabsim.base import fab
+
+    fab.add_local_paths("FabNESO")
+    FAB_IMPORTED = True
 except ImportError:
-    from base import fab
+    # If FabSim not installed we create a dummy fab namespace definining placeholder
+    # decorators to make module still importable, for example when building docs
+    from types import SimpleNamespace
+
+    fab = SimpleNamespace(task=lambda f: f, load_plugin_env_vars=lambda _: lambda f: f)
+    FAB_IMPORTED = False
 
 try:
     from fabsim.deploy.templates import template
@@ -27,7 +35,11 @@ except ImportError:
 from .ensemble_tools import create_dict_sweep, edit_parameters, list_parameter_values
 from .read_outputs import read_hdf5_datasets
 
-fab.add_local_paths("FabNESO")
+
+def _check_fab_module_imported() -> None:
+    if not FAB_IMPORTED:
+        msg = "fabsim.base.fab could not be imported - check FabSim3 is installed"
+        raise ImportError(msg)
 
 
 def _try_convert_to_int_and_check_positive(value: str | int, name: str) -> int:
@@ -129,6 +141,7 @@ def neso(
             ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions
             file with these parameter vaues overriden.
     """
+    _check_fab_module_imported()
     processes, nodes, cpus_per_process, wall_time = _check_and_process_resource_args(
         processes, nodes, cpus_per_process, wall_time
     )
@@ -209,6 +222,7 @@ def neso_ensemble(
         **parameter_scans: The set of parameters to sweep over. A colon separated list
             of lower bound, upper bound, and steps.
     """
+    _check_fab_module_imported()
     processes, nodes, cpus_per_process, wall_time = _check_and_process_resource_args(
         processes, nodes, cpus_per_process, wall_time
     )
