@@ -1,15 +1,22 @@
 """Tests for the ensemble_tools utilities."""
 
-import itertools
-import re
 import shutil
+from functools import reduce
+from operator import mul
 from pathlib import Path
 from typing import TypedDict
-from xml.etree import ElementTree
 
 import pytest
 
-from FabNESO.ensemble_tools import create_dict_sweep, create_dir_tree, edit_parameters
+from FabNESO.ensemble_tools import (
+    calculate_parameter_value,
+    create_dict_sweep,
+    create_dir_tree,
+    edit_parameters,
+    indices_iterator,
+    list_parameter_values,
+    return_directory_name,
+)
 
 
 def test_edit_parameters(tmp_path: Path) -> None:
@@ -35,39 +42,41 @@ def _check_parameter_in_conditions(
     conditions_file_name: Path, parameter_name: str, expected_value: float
 ) -> tuple[int, int]:
     """Return number of matched and failed parameters in conditions_file_name."""
-    data = ElementTree.parse(conditions_file_name)  # noqa: S314
-    root = data.getroot()
-    conditions = root.find("CONDITIONS")
-    if conditions is None:
-        msg = f"Failed to find CONDITIONS in the file {conditions_file_name}"
-        raise ValueError(msg)
-    parameters = conditions.find("PARAMETERS")
-    if parameters is None:
-        msg = (
-            "Failed to find PARAMETERS in the CONDITIONS node"
-            f" of {conditions_file_name}"
-        )
-        raise ValueError(msg)
-
-    # The number of instances that the parameter appears and is expected, and not
+    values = list_parameter_values(conditions_file_name, parameter_name)
+    # Number of matched and different parameters
     n_equals = 0
     n_different = 0
-    for element in parameters.iter("P"):
-        match = re.match(
-            r"\s*(?P<key>\w+)\s*=\s*(?P<value>-?\d*(\.?\d)+)\s*", str(element.text)
-        )
-        if match is None:
-            msg = f"Parameter definition of unexpected format: {element.text}"
-            raise ValueError(msg)
-        key = match.group("key")
-        value = float(match.group("value"))
-        if key == parameter_name:
-            if expected_value == pytest.approx(value):
-                n_equals += 1
-            else:
-                n_different += 1
+    for value in values:
+        if expected_value == pytest.approx(float(value)):
+            n_equals += 1
+        else:
+            n_different += 1
 
     return (n_equals, n_different)
+
+
+def test_list_parameter_values() -> None:
+    """Test the list_parameter_values method in ensemble_tools."""
+    conditions_file = (
+        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml"
+    )
+    parameter_values = list_parameter_values(
+        conditions_file, "particle_initial_velocity"
+    )
+    # Check that we only find one instance
+    assert len(parameter_values) == 1
+    # Check the default parameter value
+    original_value = 1.0
+    assert float(parameter_values[0]) == original_value
+    # Test a fake parameter
+    parameter_values = list_parameter_values(conditions_file, "fake_parameter_not_real")
+    assert len(parameter_values) == 0
+    # Test raise a ValueError when using an incorrect xml file
+    with pytest.raises(ValueError, match=r".*Failed to find CONDITIONS.*"):
+        parameter_values = list_parameter_values(
+            Path(__file__).parents[1] / "config_files" / "two_stream" / "mesh.xml",
+            "particle_initial_velocity",
+        )
 
 
 def test_check_parameter_in_conditions(tmp_path: Path) -> None:
@@ -135,11 +144,7 @@ def test_create_dir_tree(
     for i in range(n_dirs):
         cond_file = test_sweep_dir / "SWEEP" / f"{outdir_prefix}{i}" / "conditions.xml"
         assert cond_file.is_file()
-        para_value = (
-            scan_range[0]
-            if n_dirs == 1
-            else scan_range[0] + (i / (n_dirs - 1)) * (scan_range[1] - scan_range[0])
-        )
+        para_value = calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
         # Check the parameter has been edited correctly and appears only once
         n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
             cond_file, parameter_to_scan, para_value
@@ -194,7 +199,12 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
         create_dir_tree(**argument_dict)
 
 
-@pytest.mark.parametrize("n_divs", [1, 3, 5, 10])
+@pytest.mark.parametrize(
+    "n_dirs",
+    [
+        [1, 3, 5],
+    ],
+)
 @pytest.mark.parametrize("destructive", [True, False])
 @pytest.mark.parametrize(
     "parameter_dict",
@@ -210,29 +220,31 @@ def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
     ],
 )
 def test_create_dict_sweep(
-    tmp_path: Path, *, n_divs: int, destructive: bool, parameter_dict: dict
+    tmp_path: Path, *, n_dirs: list[int], destructive: bool, parameter_dict: dict
 ) -> None:
     """Test the create_dict_sweep method of ensemble_tools."""
     sweep_path = tmp_path / "test"
     copy_dir = Path("config_files") / "two_stream"
     edit_file = "conditions.xml"
+    # Combine the n_dirs vector into the parameter_dict
+    useable_n_dirs = n_dirs[: len(parameter_dict)]
+    for (key, item), n_dir in zip(parameter_dict.items(), useable_n_dirs, strict=True):
+        parameter_dict[key] = item[:2] + (n_dir,)
+
     create_dict_sweep(
         sweep_path=sweep_path,
-        n_divs=n_divs,
         destructive=destructive,
         copy_dir=copy_dir,
         edit_file=edit_file,
         parameter_dict=parameter_dict,
     )
-    n_total_directories = n_divs ** len(parameter_dict)
+    n_total_directories = reduce(mul, n_dirs[: len(parameter_dict)])
     # Check we make the corect number of directories
     assert len(list((sweep_path / "SWEEP").iterdir())) == n_total_directories
 
     # Loop through the directories and check the conditions file
-    for indices in itertools.product(*(range(n_divs),) * len(parameter_dict)):
-        directory_name = "-".join(
-            f"{k}_{i}" for k, i in zip(parameter_dict, indices, strict=True)
-        )
+    for indices in indices_iterator(n_dirs[: len(parameter_dict)]):
+        directory_name = return_directory_name(list(parameter_dict.keys()), indices)
         this_dir = sweep_path / "SWEEP" / directory_name
 
         # Check the directory exists
@@ -245,15 +257,90 @@ def test_create_dict_sweep(
         # Check that the parameters have been edited correctly
         for i in range(len(parameter_dict)):
             parameter = list(parameter_dict.keys())[i]
-            scan_range = parameter_dict[parameter]
-            para_value = (
-                scan_range[0]
-                if n_divs == 1
-                else scan_range[0]
-                + (indices[i] / (n_divs - 1)) * (scan_range[1] - scan_range[0])
-            )
+            low, high, n_steps = parameter_dict[parameter]
+            para_value = calculate_parameter_value(n_steps, low, high, indices[i])
             n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
                 this_dir / "conditions.xml", parameter, para_value
             )
             assert n_equal_in_value == 1
             assert n_different_in_value == 0
+
+
+@pytest.mark.parametrize("n_dirs", [1, 3, 100])
+@pytest.mark.parametrize(
+    "scan_range",
+    [
+        [1.0, 3.0],
+        [10000, 20000],
+        [5.0, 4.0],
+    ],
+)
+def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None:
+    """Tests the calculate_parameter_value method of ensemble_tools."""
+    parameter_values = [
+        calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
+        for i in range(n_dirs)
+    ]
+    # Check the returned list has the correct number of entries
+    assert len(parameter_values) == n_dirs
+    # Check the values in the generated list are unique
+    n_unique_entries = len(set(parameter_values))
+    assert len(parameter_values) == n_unique_entries
+    for value in parameter_values:
+        assert min(scan_range) <= value <= max(scan_range)
+
+
+@pytest.mark.parametrize(
+    "n_dirs",
+    [
+        [1, 3, 100],
+        [20, 20, 20],
+        [50, 2, 1],
+    ],
+)
+@pytest.mark.parametrize(
+    "parameter_list",
+    [
+        ["particle_initial_velocity", "particle_charge_density"],
+        [
+            "particle_initial_velocity",
+            "particle_charge_density",
+            "particle_number_density",
+        ],
+    ],
+)
+def test_return_directory_name(n_dirs: list[int], parameter_list: list[str]) -> None:
+    """Test the return_directory_name function."""
+    directory_names = []
+    # Create a dummy set of indices based on n_dirs
+    for indices in indices_iterator(n_dirs[: len(parameter_list)]):
+        dir_name = return_directory_name(parameter_list, indices)
+        # Check that each parameter only appears once in the directory name
+        for parameter in parameter_list:
+            assert dir_name.count(parameter) == 1
+        directory_names.append(dir_name)
+    # Check we've made the correct number of directories
+    assert len(directory_names) == reduce(mul, n_dirs[: len(parameter_list)])
+    # Check that we've made unique directories
+    n_unique_dirs = len(set(directory_names))
+    assert len(directory_names) == n_unique_dirs
+
+
+@pytest.mark.parametrize(
+    "n_dirs",
+    [
+        [1, 3, 7],
+        [2, 5, 10],
+        [1],
+        [4, 6, 9, 1, 5, 4],
+    ],
+)
+def test_indices_iterator(n_dirs: list[int]) -> None:
+    """Test the indices_iterator from the ensemble_tools."""
+    indices_list = []
+    for indices in indices_iterator(n_dirs):
+        assert len(indices) == len(n_dirs)
+        indices_list.append(indices)
+    assert len(indices_list) == reduce(mul, n_dirs)
+    n_unique_indices = len(set(indices_list))
+    assert n_unique_indices == len(indices_list)
