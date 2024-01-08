@@ -152,7 +152,10 @@ def list_parameter_values(conditions_file: Path, parameter_name: str) -> list[st
 
 
 def edit_parameters(
-    conditions_file: Path, parameter_overrides: Mapping[str, float | str]
+    conditions_file: Path,
+    parameter_overrides: Mapping[str, float | str],
+    *,
+    create_missing: bool = False,
 ) -> None:
     """Edit parameters in the configuration file to the desired value."""
     parser = ElementTree.XMLParser(  # noqa: S314
@@ -168,6 +171,7 @@ def edit_parameters(
     if parameters is None:
         msg = f"Conditions file {conditions_file} does not contain a PARAMETERS node."
         raise ValueError(msg)
+    parameter_found = {para_name: False for para_name in parameter_overrides}
     for element in parameters.iter("P"):
         if element.text is None:
             msg = f"Parameter element {element} does contain a definition."
@@ -179,4 +183,11 @@ def edit_parameters(
         key = match.group("key")
         if key in parameter_overrides:
             element.text = f" {key} = {parameter_overrides[key]} "
+            parameter_found[key] = True
+    if create_missing:
+        for parameter in parameter_found:
+            if not parameter_found[parameter]:
+                new_para = ElementTree.Element("P")
+                new_para.text = f" {parameter} = {parameter_overrides[parameter]} "
+                parameters.append(new_para)
     data.write(conditions_file)
