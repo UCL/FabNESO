@@ -19,6 +19,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "h5py",
+    "pyvbmc",
 ]
 description = "Neptune Exploratory SOftware (NESO) plugin for FabSim3"
 dynamic = [

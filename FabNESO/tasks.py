@@ -16,6 +16,7 @@ import pyvbmc
 
 try:
     from fabsim.base import fab
+    from fabsim.deploy.templates import template
 
     fab.add_local_paths("FabNESO")
     FAB_IMPORTED = True
@@ -25,12 +26,11 @@ except ImportError:
     from types import SimpleNamespace
 
     fab = SimpleNamespace(task=lambda f: f, load_plugin_env_vars=lambda _: lambda f: f)
+    template = SimpleNamespace(
+        task=lambda f: f, load_plugin_env_vars=lambda _: lambda f: f
+    )
     FAB_IMPORTED = False
 
-try:
-    from fabsim.deploy.templates import template
-except ImportError:
-    from deploy.templates import template
 
 from .ensemble_tools import create_dict_sweep, edit_parameters, list_parameter_values
 from .read_outputs import read_hdf5_datasets
