@@ -269,6 +269,14 @@ def neso_ensemble(
         fab.run_ensemble(config, sweep_dir)
 
 
+def _parse_vbmc_bounds_string(
+    vbmc_bounds_string: str,
+    delimiter: str,
+) -> tuple[float, float]:
+    lower_bound, upper_bound = vbmc_bounds_string.split(delimiter)
+    return float(lower_bound), float(upper_bound)
+
+
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso_vbmc(
@@ -281,6 +289,7 @@ def neso_vbmc(
     cpus_per_process: int = 1,
     wall_time: str = "00:15:00",
     output_directory_name: str = "",
+    **vbmc_parameters: str,
 ) -> None:
     """
     Run an instance of PyVBMC on a NESO solver.
@@ -297,6 +306,8 @@ def neso_vbmc(
             applicable when running on a multi-node system.
         wall_time: Maximum time to allow job to run for. Only applicable when submitting
             to a job scheduler.
+        **vbmc_parameters: The parameters to be scanned in the VBMC instance. The value
+            is a colon separated list of the lower and upper bounds of the parameter
 
     """
     # Create the output directory
@@ -334,9 +345,8 @@ def neso_vbmc(
 
     # Hard coded for the two_stream config. Ideally this would be factored out
     parameters_to_scan = {
-        "particle_initial_velocity": (0.0, 2.0),
-        "particle_charge_density": (20.0, 200.0),
-        "particle_number_density": (20.0, 200.0),
+        vbmc_parameter: _parse_vbmc_bounds_string(parameter_bounds, ":")
+        for vbmc_parameter, parameter_bounds in vbmc_parameters.items()
     }
 
     config_dict["parameters_to_scan"] = parameters_to_scan
@@ -366,7 +376,7 @@ def neso_vbmc(
     options = {
         # 50 * D + 2 is the default, but leave this here to allow
         # smaller runs for debugging
-        "max_fun_evals": 2 * (len(theta_0) + 2),
+        "max_fun_evals": 50 * (len(theta_0) + 2),
         # Can't see a way of doing this and saving the plots
         # without it creating a new xwindow?
         "plot": False,
