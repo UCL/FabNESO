@@ -27,9 +27,6 @@ except ImportError:
     from types import SimpleNamespace
 
     fab = SimpleNamespace(task=lambda f: f, load_plugin_env_vars=lambda _: lambda f: f)
-    template = SimpleNamespace(
-        task=lambda f: f, load_plugin_env_vars=lambda _: lambda f: f
-    )
     FAB_IMPORTED = False
 
 
@@ -277,6 +274,18 @@ def _parse_vbmc_bounds_string(
     return float(lower_bound), float(upper_bound)
 
 
+def _create_neso_config_dict(
+    config: str,
+    para_overrides: dict[str, Any],
+    neso_args: dict[str, int | str],
+) -> dict[str, Any]:
+    return {
+        "config": config,
+        "para_overrides": para_overrides,
+        "neso_args": neso_args,
+    }
+
+
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso_vbmc(
@@ -289,6 +298,7 @@ def neso_vbmc(
     cpus_per_process: int = 1,
     wall_time: str = "00:15:00",
     output_directory_name: str = "",
+    reference_field_file: str = "",
     **vbmc_parameters: str,
 ) -> None:
     """
@@ -306,6 +316,8 @@ def neso_vbmc(
             applicable when running on a multi-node system.
         wall_time: Maximum time to allow job to run for. Only applicable when submitting
             to a job scheduler.
+        reference_field_file: Name of a numpy file that holds a reference field
+            measurement for the calibration run
         **vbmc_parameters: The parameters to be scanned in the VBMC instance. The value
             is a colon separated list of the lower and upper bounds of the parameter
 
@@ -315,19 +327,24 @@ def neso_vbmc(
     if not output_directory.is_dir():
         output_directory.mkdir(parents=True)
 
+    if not Path(reference_field_file).is_file():
+        msg = (
+            f"reference_field_file {reference_field_file} not found. "
+            "One must be specificed for the calibration to run. If in doubt, please "
+            "run the neso_write_field task to write a measured field to file first."
+        )
+        raise ValueError(msg)
+
     # Contains a number of items that enable the vbmc running of NESO
-    config_dict = {
-        "config": config,
-        "para_overrides": {
-            # These ensure that the field information is written out, which is not done
-            # be default in the conditions files.
-            # This would need to be changed per solver
-            "particle_num_write_field_steps": 100,
-            "line_field_deriv_evaluations_step": 20,
-            "line_field_deriv_evaluations_numx": 100,
-            "line_field_deriv_evaluations_numy": 1,
-        },
-        "noise_factor": 0.1,
+
+    # These ensure that the field information is written out, which is not done
+    # be default in the conditions files.
+    # This would need to be changed per solver
+    para_overrides = {
+        "particle_num_write_field_steps": 100,
+        "line_field_deriv_evaluations_step": 20,
+        "line_field_deriv_evaluations_numx": 100,
+        "line_field_deriv_evaluations_numy": 1,
     }
 
     # Put all of the NESO arguments in one dict
@@ -341,7 +358,11 @@ def neso_vbmc(
         wall_time,
     )
 
-    config_dict["neso_args"] = neso_args
+    config_dict = _create_neso_config_dict(config, para_overrides, neso_args)
+
+    # Make this read in from a config too?
+    observation_noise_std = 0.1
+    config_dict["observation_noise_std"] = observation_noise_std
 
     # Hard coded for the two_stream config. Ideally this would be factored out
     parameters_to_scan = {
@@ -363,9 +384,8 @@ def neso_vbmc(
     rng = np.random.default_rng()
     theta_0 = rng.uniform(plausible_lower_bounds, plausible_upper_bounds)
 
-    # Run a nominal version of the model with central values to find
-    # the `true' field measurements. Ideally this would be measured data
-    config_dict["initial_run"] = run_instance_return_field(config_dict)
+    # Read in a reference field from an external file for the calibration
+    config_dict["initial_run"] = np.loadtxt(reference_field_file)
 
     # Get a timestamp to label the vbmc logfile
     timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -404,6 +424,69 @@ def neso_vbmc(
 
     # Save the final output posterior
     vbmc.vp.save(output_directory / f"final_posterior_{timestamp}.pkl")
+
+
+@fab.task
+@fab.load_plugin_env_vars("FabNESO")
+def neso_write_field(
+    config: str,
+    solver: str = "Electrostatic2D3V",
+    conditions_file_name: str = "conditions.xml",
+    mesh_file_name: str = "mesh.xml",
+    processes: int = 4,
+    nodes: int = 1,
+    cpus_per_process: int = 1,
+    wall_time: str = "00:15:00",
+    out_file_name: str = "field_write_out.txt",
+    **parameter_overrides: str,
+) -> None:
+    """
+    Run a single NESO solver instance and save the observed field to a file.
+
+    Args:
+        config: Directory with single run configuration information.
+        solver: Which NESO solver to use.
+        conditions_file_name: Name of conditions XML file in configuration directory.
+        mesh_file_name: Name of mesh XML in configuration directory.
+        processes: Number of processes to run.
+        nodes: Number of nodes to run on. Only applicable when running on a multi-node
+            system.
+        cpus_per_process: Number of processing units to use per process. Only
+            applicable when running on a multi-node system.
+        wall_time: Maximum time to allow job to run for. Only applicable when submitting
+            to a job scheduler.
+        out_file_name: Name of the file to be created containing the measured field
+        **parameter_overrides: Additional keyword arguments will be passed to
+            ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions
+            file with these parameter vaues overriden.
+    """
+    # Assemble the NESO arguments
+    neso_args = _create_job_args_dict(
+        solver,
+        conditions_file_name,
+        mesh_file_name,
+        processes,
+        nodes,
+        cpus_per_process,
+        wall_time,
+    )
+
+    para_overrides = dict(
+        {
+            # The necessary overrides for writing out the field.
+            # Factor this out of this and VBMC task
+            "particle_num_write_field_steps": 100,
+            "line_field_deriv_evaluations_step": 20,
+            "line_field_deriv_evaluations_numx": 100,
+            "line_field_deriv_evaluations_numy": 1,
+        },
+        **parameter_overrides,
+    )
+
+    config_dict = _create_neso_config_dict(config, para_overrides, neso_args)
+
+    # Write out the returned field to file
+    np.savetxt(out_file_name, run_instance_return_field(config_dict)["field_value"])
 
 
 def run_instance_return_field(
@@ -469,7 +552,6 @@ def log_density(
 
     # Calculate the joint log likelihood using the reference field in the config_dict
     return -(
-        (config_dict["initial_run"]["field_value"] - observed_results["field_value"])
-        ** 2
-        / (2 * config_dict["noise_factor"] ** 2)
+        (config_dict["initial_run"] - observed_results["field_value"]) ** 2
+        / (2 * config_dict["observation_noise_std"] ** 2)
     ).sum()
