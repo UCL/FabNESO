@@ -274,18 +274,6 @@ def _parse_vbmc_bounds_string(
     return float(lower_bound), float(upper_bound)
 
 
-def _create_neso_config_dict(
-    config: str,
-    para_overrides: dict[str, Any],
-    neso_args: dict[str, int | str],
-) -> dict[str, Any]:
-    return {
-        "config": config,
-        "para_overrides": para_overrides,
-        "neso_args": neso_args,
-    }
-
-
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
 def neso_vbmc(
@@ -358,11 +346,16 @@ def neso_vbmc(
         wall_time,
     )
 
-    config_dict = _create_neso_config_dict(config, para_overrides, neso_args)
-
     # Make this read in from a config too?
     observation_noise_std = 0.1
-    config_dict["observation_noise_std"] = observation_noise_std
+
+    # Make the config_dict for the calibration run
+    config_dict = {
+        "config": config,
+        "para_overrides": para_overrides,
+        "neso_args": neso_args,
+        "observation_noise_std": observation_noise_std,
+    }
 
     # Hard coded for the two_stream config. Ideally this would be factored out
     parameters_to_scan = {
@@ -483,14 +476,17 @@ def neso_write_field(
         **parameter_overrides,
     )
 
-    config_dict = _create_neso_config_dict(config, para_overrides, neso_args)
+    config_dict = {"config": config, "neso_args": neso_args}
 
     # Write out the returned field to file
-    np.savetxt(out_file_name, run_instance_return_field(config_dict)["field_value"])
+    np.savetxt(
+        out_file_name,
+        run_instance_return_field(config_dict, para_overrides)["field_value"],
+    )
 
 
 def run_instance_return_field(
-    config_dict: dict[str, Any],
+    config_dict: dict[str, Any], para_overrides: dict[str, Any]
 ) -> dict[str, np.ndarray]:
     """Run a single instance of the NESO solver and return the observed_field."""
     # If we're running remotely, tell the submission to wait until done
@@ -510,7 +506,7 @@ def run_instance_return_field(
         cpus_per_process=config_dict["neso_args"]["cpuspertask"],
         wall_time=config_dict["neso_args"]["job_wall_time"],
         create_missing_parameters=True,
-        **config_dict["para_overrides"],
+        **para_overrides,
     )
     fab.fetch_results()
     local_results_dir = Path(fab.env.job_results_local) / template(
@@ -524,7 +520,7 @@ def run_instance_return_field(
                 "particle_num_time_steps",
             )[0]
         )
-        - config_dict["para_overrides"]["line_field_deriv_evaluations_step"]
+        - para_overrides["line_field_deriv_evaluations_step"]
     )
     return read_hdf5_datasets(
         local_results_dir / "Electrostatic2D3V_line_field_deriv_evaluations.h5part",
@@ -545,10 +541,8 @@ def log_density(
         **config_dict["para_overrides"],
     )
 
-    config_dict["para_overrides"] = parameters
-
     # Run an instance of NESO and calculate the measured field strength.
-    observed_results = run_instance_return_field(config_dict)
+    observed_results = run_instance_return_field(config_dict, parameters)
 
     # Calculate the joint log likelihood using the reference field in the config_dict
     return -(
