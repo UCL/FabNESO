@@ -269,9 +269,19 @@ def neso_ensemble(
 def _parse_vbmc_bounds_string(
     vbmc_bounds_string: str,
     delimiter: str,
-) -> tuple[float, float]:
-    lower_bound, upper_bound = vbmc_bounds_string.split(delimiter)
-    return float(lower_bound), float(upper_bound)
+) -> tuple[float, float, float, float]:
+    (
+        lower_bound,
+        upper_bound,
+        plausible_lower_bound,
+        plausible_upper_bound,
+    ) = vbmc_bounds_string.split(delimiter)
+    return (
+        float(lower_bound),
+        float(upper_bound),
+        float(plausible_lower_bound),
+        float(plausible_upper_bound),
+    )
 
 
 @fab.task
@@ -307,7 +317,8 @@ def neso_vbmc(
         reference_field_file: Name of a numpy file that holds a reference field
             measurement for the calibration run
         **vbmc_parameters: The parameters to be scanned in the VBMC instance. The value
-            is a colon separated list of the lower and upper bounds of the parameter
+            is a colon separated list: lower bound: upper bound: plausible lower bound
+            : plausible upper bound
 
     """
     # Create the output directory
@@ -369,9 +380,8 @@ def neso_vbmc(
     bounds = list(zip(*parameters_to_scan.values(), strict=True))
     lower_bounds = np.array(bounds[0])
     upper_bounds = np.array(bounds[1])
-
-    plausible_lower_bounds = lower_bounds + (upper_bounds - lower_bounds) / 4
-    plausible_upper_bounds = upper_bounds - (upper_bounds - lower_bounds) / 4
+    plausible_lower_bounds = np.array(bounds[2])
+    plausible_upper_bounds = np.array(bounds[3])
 
     # Choose a random starting position
     rng = np.random.default_rng()
