@@ -301,7 +301,11 @@ def neso_vbmc(
     **vbmc_parameters: str,
 ) -> None:
     """
-    Run an instance of PyVBMC on a NESO solver.
+    Run variational Bayesian Monte Carlo (VBMC) to calibrate NESO solver parameters.
+
+    The VBMC algorithm (Acerbi, 2018) is an approximate Bayesian inference method for
+    efficient parameter calibration in expensive to simulate models. Here we use the
+    Python implementation of the algorithm in the package PyVBMC (Huggins et al., 2023).
 
     Args:
         config: Directory with ensemble configuration information.
@@ -320,6 +324,13 @@ def neso_vbmc(
         **vbmc_parameters: The parameters to be scanned in the VBMC instance. The value
             is a colon separated list: lower bound: upper bound: plausible lower bound
             : plausible upper bound
+
+    References:
+        1. Acerbi, L. (2018). Variational Bayesian Monte Carlo.
+           Advances in Neural Information Processing Systems, 31.
+        2. Huggins et al., (2023). PyVBMC: Efficient Bayesian inference in Python.
+           Journal of Open Source Software, 8(86), 5428,
+           https://doi.org/10.21105/joss.05428
 
     """
     # Create the output directory
