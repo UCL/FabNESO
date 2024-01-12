@@ -134,7 +134,8 @@ def neso(
             applicable when running on a multi-node system.
         wall_time: Maximum time to allow job to run for. Only applicable when submitting
             to a job scheduler.
-        create_missing_parameters: Force missing parameters in overrides to be added
+        create_missing_parameters: Force parameters in ``parameter_overrides`` missing
+            from conditions file to be added.
         **parameter_overrides: Additional keyword arguments will be passed to
             ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions
             file with these parameter vaues overriden.

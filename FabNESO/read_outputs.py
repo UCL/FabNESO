@@ -1,4 +1,4 @@
-"""A script to read the outputs of the NESO solvers."""
+"""Functions for reading the outputs of the NESO solvers."""
 
 from collections.abc import Sequence
 from pathlib import Path
