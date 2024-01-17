@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FabNESO.make_sweep_dir module &mdash; FabNESO 0.1.dev1 documentation</title>
+  <title>FabNESO.read_outputs module &mdash; FabNESO 0.1.dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -21,8 +21,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FabNESO.read_outputs module" href="FabNESO.read_outputs.html" />
-    <link rel="prev" title="FabNESO.ensemble_tools module" href="FabNESO.ensemble_tools.html" /> 
+    <link rel="next" title="FabNESO.tasks module" href="FabNESO.tasks.html" />
+    <link rel="prev" title="FabNESO.make_sweep_dir module" href="FabNESO.make_sweep_dir.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -56,11 +56,11 @@
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_write_field"><code class="docutils literal notranslate"><span class="pre">neso_write_field()</span></code></a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="FabNESO.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="FabNESO.ensemble_tools.html">FabNESO.ensemble_tools module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">FabNESO.make_sweep_dir module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#FabNESO.make_sweep_dir.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="FabNESO.make_sweep_dir.html">FabNESO.make_sweep_dir module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">FabNESO.read_outputs module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FabNESO.read_outputs.read_hdf5_datasets"><code class="docutils literal notranslate"><span class="pre">read_hdf5_datasets()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="FabNESO.read_outputs.html">FabNESO.read_outputs module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FabNESO.tasks.html">FabNESO.tasks module</a></li>
 </ul>
 </li>
@@ -83,9 +83,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="FabNESO.html">FabNESO package</a></li>
-      <li class="breadcrumb-item active">FabNESO.make_sweep_dir module</li>
+      <li class="breadcrumb-item active">FabNESO.read_outputs module</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/FabNESO.make_sweep_dir.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/FabNESO.read_outputs.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -93,13 +93,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-FabNESO.make_sweep_dir">
-<span id="fabneso-make-sweep-dir-module"></span><h1>FabNESO.make_sweep_dir module<a class="headerlink" href="#module-FabNESO.make_sweep_dir" title="Link to this heading"></a></h1>
-<p>Makes a sweep directory for FabNESO.</p>
+  <section id="module-FabNESO.read_outputs">
+<span id="fabneso-read-outputs-module"></span><h1>FabNESO.read_outputs module<a class="headerlink" href="#module-FabNESO.read_outputs" title="Link to this heading"></a></h1>
+<p>Functions for reading the outputs of the NESO solvers.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="FabNESO.make_sweep_dir.main">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.make_sweep_dir.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/make_sweep_dir.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.make_sweep_dir.main" title="Link to this definition"></a></dt>
-<dd><p>Entrypoint for script to make sweep directory.</p>
+<dt class="sig sig-object py" id="FabNESO.read_outputs.read_hdf5_datasets">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.read_outputs.</span></span><span class="sig-name descname"><span class="pre">read_hdf5_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hdf5_file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FabNESO/read_outputs.html#read_hdf5_datasets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.read_outputs.read_hdf5_datasets" title="Link to this definition"></a></dt>
+<dd><p>Read HDF5 dataset output from NESO.</p>
 </dd></dl>
 
 </section>
@@ -108,8 +108,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FabNESO.ensemble_tools.html" class="btn btn-neutral float-left" title="FabNESO.ensemble_tools module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FabNESO.read_outputs.html" class="btn btn-neutral float-right" title="FabNESO.read_outputs module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FabNESO.make_sweep_dir.html" class="btn btn-neutral float-left" title="FabNESO.make_sweep_dir module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FabNESO.tasks.html" class="btn btn-neutral float-right" title="FabNESO.tasks module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

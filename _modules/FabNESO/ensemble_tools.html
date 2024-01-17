@@ -248,7 +248,10 @@
 <div class="viewcode-block" id="edit_parameters">
 <a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.edit_parameters">[docs]</a>
 <span class="k">def</span> <span class="nf">edit_parameters</span><span class="p">(</span>
-    <span class="n">conditions_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">parameter_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="n">conditions_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">parameter_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">create_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Edit parameters in the configuration file to the desired value.&quot;&quot;&quot;</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">XMLParser</span><span class="p">(</span>  <span class="c1"># noqa: S314</span>
@@ -264,6 +267,7 @@
     <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Conditions file </span><span class="si">{</span><span class="n">conditions_file</span><span class="si">}</span><span class="s2"> does not contain a PARAMETERS node.&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">parameter_found</span> <span class="o">=</span> <span class="p">{</span><span class="n">para_name</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">para_name</span> <span class="ow">in</span> <span class="n">parameter_overrides</span><span class="p">}</span>
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter element </span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2"> does contain a definition.&quot;</span>
@@ -275,6 +279,13 @@
         <span class="n">key</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">parameter_overrides</span><span class="p">:</span>
             <span class="n">element</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">parameter_overrides</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="n">parameter_found</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">create_missing</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameter_found</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">parameter_found</span><span class="p">[</span><span class="n">parameter</span><span class="p">]:</span>
+                <span class="n">new_para</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">)</span>
+                <span class="n">new_para</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">parameter_overrides</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_para</span><span class="p">)</span>
     <span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">conditions_file</span><span class="p">)</span></div>
 
 </pre></div>

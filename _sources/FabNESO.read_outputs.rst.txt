@@ -1,0 +1,7 @@
+FabNESO.read\_outputs module
+============================
+
+.. automodule:: FabNESO.read_outputs
+   :members:
+   :undoc-members:
+   :show-inheritance:
