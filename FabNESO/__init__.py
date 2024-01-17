@@ -1,9 +1,9 @@
 """Neptune Exploratory SOftware (NESO) plugin for FabSim3."""
 
 try:
-    from .tasks import neso, neso_ensemble
+    from .tasks import neso, neso_ensemble, neso_vbmc, neso_write_field
 
-    __all__ = ["neso", "neso_ensemble"]
+    __all__ = ["neso", "neso_ensemble", "neso_vbmc", "neso_write_field"]
 
 except ImportError:
     import warnings
