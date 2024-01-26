@@ -18,12 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Typing :: Typed",
 ]
-dependencies = [
-    "h5py",
-    "pyvbmc",
-]
 description = "Neptune Exploratory SOftware (NESO) plugin for FabSim3"
 dynamic = [
+    "dependencies",
     "version",
 ]
 keywords = [
@@ -96,6 +93,9 @@ pylint.max-args = 10
 
 [tool.setuptools]
 packages = ["FabNESO"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
