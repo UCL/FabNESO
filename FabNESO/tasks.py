@@ -314,8 +314,8 @@ def neso_vbmc(  # noqa: PLR0913
 
     Args:
         config: Directory with ensemble configuration information.
-        reference_field_file: Name of a numpy file that holds a reference field
-            measurement for the calibration run.
+        reference_field_file: Name of a NumPy .txt file that holds a reference
+            field measurement for the calibration run.
 
     Keyword Args:
         solver: Which NESO solver to use.
