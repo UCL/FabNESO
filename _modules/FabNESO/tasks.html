@@ -202,6 +202,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        config: Directory with single run configuration information.</span>
+
+<span class="sd">    Keyword Args:</span>
 <span class="sd">        solver: Which NESO solver to use.</span>
 <span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
 <span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>
@@ -289,6 +291,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        config: Directory with ensemble configuration information.</span>
+
+<span class="sd">    Keyword Args:</span>
 <span class="sd">        solver: Which NESO solver to use.</span>
 <span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
 <span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>
@@ -371,17 +375,18 @@
 <a class="viewcode-back" href="../../FabNESO.tasks.html#FabNESO.neso_vbmc">[docs]</a>
 <span class="nd">@fab</span><span class="o">.</span><span class="n">task</span>
 <span class="nd">@fab</span><span class="o">.</span><span class="n">load_plugin_env_vars</span><span class="p">(</span><span class="s2">&quot;FabNESO&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">neso_vbmc</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">neso_vbmc</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
     <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">reference_field_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Electrostatic2D3V&quot;</span><span class="p">,</span>
     <span class="n">conditions_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;conditions.xml&quot;</span><span class="p">,</span>
     <span class="n">mesh_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mesh.xml&quot;</span><span class="p">,</span>
+    <span class="n">observation_noise_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
     <span class="n">processes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">cpus_per_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">wall_time</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;00:15:00&quot;</span><span class="p">,</span>
     <span class="n">output_directory_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="n">reference_field_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="o">**</span><span class="n">vbmc_parameters</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -393,9 +398,15 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        config: Directory with ensemble configuration information.</span>
+<span class="sd">        reference_field_file: Name of a NumPy .txt file that holds a reference</span>
+<span class="sd">            field measurement for the calibration run.</span>
+
+<span class="sd">    Keyword Args:</span>
 <span class="sd">        solver: Which NESO solver to use.</span>
 <span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
 <span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>
+<span class="sd">        observation_noise_std: Standard deviation of the observed noise, used for log</span>
+<span class="sd">            likelihood calculation.</span>
 <span class="sd">        processes: Number of processes to run in each job in the ensemble.</span>
 <span class="sd">        nodes: Number of nodes to run on. Only applicable when running on a multi-node</span>
 <span class="sd">            system.</span>
@@ -403,8 +414,6 @@
 <span class="sd">            applicable when running on a multi-node system.</span>
 <span class="sd">        wall_time: Maximum time to allow job to run for. Only applicable when submitting</span>
 <span class="sd">            to a job scheduler.</span>
-<span class="sd">        reference_field_file: Name of a numpy file that holds a reference field</span>
-<span class="sd">            measurement for the calibration run</span>
 <span class="sd">        **vbmc_parameters: The parameters to be scanned in the VBMC instance. The value</span>
 <span class="sd">            is a colon separated list: lower bound: upper bound: plausible lower bound</span>
 <span class="sd">            : plausible upper bound</span>
@@ -452,9 +461,6 @@
         <span class="n">cpus_per_process</span><span class="p">,</span>
         <span class="n">wall_time</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="c1"># Make this read in from a config too?</span>
-    <span class="n">observation_noise_std</span> <span class="o">=</span> <span class="mf">0.1</span>
 
     <span class="c1"># Make the config_dict for the calibration run</span>
     <span class="n">config_dict</span> <span class="o">=</span> <span class="p">{</span>
@@ -547,6 +553,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        config: Directory with single run configuration information.</span>
+
+<span class="sd">    Keyword Args:</span>
 <span class="sd">        solver: Which NESO solver to use.</span>
 <span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
 <span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>

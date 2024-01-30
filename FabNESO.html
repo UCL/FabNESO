@@ -98,8 +98,10 @@
 <dd><p>Run a single NESO solver instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – Directory with single run configuration information.</p></li>
+<dd class="field-odd"><p><strong>config</strong> – Directory with single run configuration information.</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
 <li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
 <li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
@@ -126,8 +128,10 @@ file with these parameter vaues overriden.</p></li>
 <dd><p>Run ensemble of NESO solver instances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – Directory with ensemble configuration information.</p></li>
+<dd class="field-odd"><p><strong>config</strong> – Directory with ensemble configuration information.</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
 <li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
 <li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
@@ -147,7 +151,7 @@ of lower bound, upper bound, and steps.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="FabNESO.neso_vbmc">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.</span></span><span class="sig-name descname"><span class="pre">neso_vbmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Electrostatic2D3V'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conditions.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mesh.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus_per_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wall_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'00:15:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_field_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vbmc_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/tasks.html#neso_vbmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.neso_vbmc" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">FabNESO.</span></span><span class="sig-name descname"><span class="pre">neso_vbmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_field_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Electrostatic2D3V'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conditions.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mesh.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_noise_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus_per_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wall_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'00:15:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vbmc_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/tasks.html#neso_vbmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.neso_vbmc" title="Link to this definition"></a></dt>
 <dd><p>Run variational Bayesian Monte Carlo (VBMC) to calibrate NESO solver parameters.</p>
 <p>The VBMC algorithm (Acerbi, 2018) is an approximate Bayesian inference method for
 efficient parameter calibration in expensive to simulate models. Here we use the
@@ -156,9 +160,17 @@ Python implementation of the algorithm in the package PyVBMC (Huggins et al., 20
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – Directory with ensemble configuration information.</p></li>
+<li><p><strong>reference_field_file</strong> – Name of a NumPy .txt file that holds a reference
+field measurement for the calibration run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
 <li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
 <li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
+<li><p><strong>observation_noise_std</strong> – Standard deviation of the observed noise, used for log
+likelihood calculation.</p></li>
 <li><p><strong>processes</strong> – Number of processes to run in each job in the ensemble.</p></li>
 <li><p><strong>nodes</strong> – Number of nodes to run on. Only applicable when running on a multi-node
 system.</p></li>
@@ -166,8 +178,6 @@ system.</p></li>
 applicable when running on a multi-node system.</p></li>
 <li><p><strong>wall_time</strong> – Maximum time to allow job to run for. Only applicable when submitting
 to a job scheduler.</p></li>
-<li><p><strong>reference_field_file</strong> – Name of a numpy file that holds a reference field
-measurement for the calibration run</p></li>
 <li><p><strong>**vbmc_parameters</strong> – The parameters to be scanned in the VBMC instance. The value
 is a colon separated list: lower bound: upper bound: plausible lower bound
 : plausible upper bound</p></li>
@@ -190,8 +200,10 @@ Journal of Open Source Software, 8(86), 5428,
 <dd><p>Run a single NESO solver instance and save the observed field to a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – Directory with single run configuration information.</p></li>
+<dd class="field-odd"><p><strong>config</strong> – Directory with single run configuration information.</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
 <li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
 <li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
