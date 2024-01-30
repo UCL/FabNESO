@@ -124,6 +124,8 @@ def neso(
 
     Args:
         config: Directory with single run configuration information.
+
+    Keyword Args:
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
@@ -208,6 +210,8 @@ def neso_ensemble(
 
     Args:
         config: Directory with ensemble configuration information.
+
+    Keyword Args:
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
@@ -287,17 +291,18 @@ def _parse_vbmc_bounds_string(
 
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
-def neso_vbmc(
+def neso_vbmc(  # noqa: PLR0913
     config: str,
+    reference_field_file: str,
     solver: str = "Electrostatic2D3V",
     conditions_file_name: str = "conditions.xml",
     mesh_file_name: str = "mesh.xml",
+    observation_noise_std: float = 0.1,
     processes: int = 4,
     nodes: int = 1,
     cpus_per_process: int = 1,
     wall_time: str = "00:15:00",
     output_directory_name: str = "",
-    reference_field_file: str = "",
     **vbmc_parameters: str,
 ) -> None:
     """
@@ -309,9 +314,15 @@ def neso_vbmc(
 
     Args:
         config: Directory with ensemble configuration information.
+        reference_field_file: Name of a NumPy .txt file that holds a reference
+            field measurement for the calibration run.
+
+    Keyword Args:
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
+        observation_noise_std: Standard deviation of the observed noise, used for log
+            likelihood calculation.
         processes: Number of processes to run in each job in the ensemble.
         nodes: Number of nodes to run on. Only applicable when running on a multi-node
             system.
@@ -319,8 +330,6 @@ def neso_vbmc(
             applicable when running on a multi-node system.
         wall_time: Maximum time to allow job to run for. Only applicable when submitting
             to a job scheduler.
-        reference_field_file: Name of a numpy file that holds a reference field
-            measurement for the calibration run
         **vbmc_parameters: The parameters to be scanned in the VBMC instance. The value
             is a colon separated list: lower bound: upper bound: plausible lower bound
             : plausible upper bound
@@ -368,9 +377,6 @@ def neso_vbmc(
         cpus_per_process,
         wall_time,
     )
-
-    # Make this read in from a config too?
-    observation_noise_std = 0.1
 
     # Make the config_dict for the calibration run
     config_dict = {
@@ -460,6 +466,8 @@ def neso_write_field(
 
     Args:
         config: Directory with single run configuration information.
+
+    Keyword Args:
         solver: Which NESO solver to use.
         conditions_file_name: Name of conditions XML file in configuration directory.
         mesh_file_name: Name of mesh XML in configuration directory.
