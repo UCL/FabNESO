@@ -17,13 +17,6 @@ import chaospy as cp
 import easyvvuq as uq
 import numpy as np
 import pyvbmc
-from easyvvuq.actions import (
-    Actions,
-    CreateRunDirectory,
-    Decode,
-    Encode,
-    ExecuteLocal,
-)
 
 try:
     from fabsim.base import fab
@@ -316,7 +309,7 @@ def neso_vbmc(  # noqa: PLR0913
     **vbmc_parameters: str,
 ) -> None:
     """
-    Run variational Bayesian Monte Carlo (VBMC) to calibrate NESO solver parametes.
+    Run variational Bayesian Monte Carlo (VBMC) to calibrate NESO solver parameters.
 
     The VBMC algorithm (Acerbi, 2018) is an approximate Bayesian inference method for
     efficient parameter calibration in expensive to simulate models. Here we use the
@@ -619,6 +612,7 @@ def _parse_vvuq_parameters(
 @fab.load_plugin_env_vars("FabNESO")
 def single_run_vvuq(
     config: str,
+    mesh_file: str = "mesh.xml",
     solver: str = "Electrostatic2D3V",
     processes: str | int = 4,
     nodes: str | int = 1,
@@ -639,6 +633,7 @@ def single_run_vvuq(
 
     Keyword Args:
         solver: Which NESO solver to use.
+        mesh_file_name: Name of mesh XML in configuration directory.
         processes: Number of processes to run.
         nodes: Number of nodes to run on. Only applicable when running on a multi-node
             system.
@@ -658,15 +653,26 @@ def single_run_vvuq(
             }
         )
 
-    # Run an instance of NESO
-    neso(
-        config,
-        solver=solver,
-        processes=processes,
-        nodes=nodes,
-        cpus_per_process=cpus_per_process,
-        wall_time=wall_time,
-    )
+    # Make a temporary directory to store the configs in - they can be deleted when the
+    # run is done
+    with TemporaryDirectory(dir=config) as temporary_config_dir:
+        config_path = Path(temporary_config_dir)
+
+        # Copy the mesh and conditions files here for FabSIM to read it properly
+        shutil.copyfile(mesh_file, config_path / Path(mesh_file).name)
+        shutil.copyfile("conditions.xml", config_path / "conditions.xml")
+
+        # Run an instance of NESO
+        neso(
+            temporary_config_dir,
+            solver=solver,
+            mesh_file_name=Path(mesh_file).name,
+            processes=processes,
+            nodes=nodes,
+            cpus_per_process=cpus_per_process,
+            wall_time=wall_time,
+        )
+
     # Retrieve the results
     fab.fetch_results()
 
@@ -683,7 +689,7 @@ def neso_vvuq_campaign(  # noqa: PLR0913
     vvuq_config: str,
     conditions_template: str = "conditions.template",
     vvuq_parameters: str = "vvuq_parameters.txt",
-    vvuq_script: str = "run_vvuq_instance.sh",
+    vvuq_script: str = "FabNESO/run_vvuq_instance.sh",
     neso_mesh_file: str = "mesh.xml",
     output_dir: str = "neso_pce/",
     neso_outfile: str = "Electrostatic2D3V_line_field_evaluations.h5part",
@@ -692,6 +698,8 @@ def neso_vvuq_campaign(  # noqa: PLR0913
     nodes: str | int = 1,
     cpus_per_process: str | int = 1,
     wall_time: str = "00:15:00",
+    *,
+    run_vvuq_sequential: bool = True,
 ) -> None:
     """
     Run a VVUQ campaign on a NESO solver.
@@ -719,6 +727,8 @@ def neso_vvuq_campaign(  # noqa: PLR0913
             applicable when running on a multi-node system.
         wall_time: Maximum time to allow job to run for. Only applicable when submitting
             to a job scheduler.
+        run_vvuq_sequential: Set to False to parallelise. Default is True because this
+            can cause issues if unchecked.
 
     """
     path_to_vvuq_configs = Path(fab.find_config_file_path(vvuq_config))
@@ -742,21 +752,21 @@ def neso_vvuq_campaign(  # noqa: PLR0913
     )
 
     # Get the path for this plugin,
-    vvuq_run_path = Path(fab.get_plugin_path("FabNESO")) / "FabNESO" / vvuq_script
+    vvuq_run_path = Path(fab.get_plugin_path("FabNESO")) / vvuq_script
 
     # The script that runs the individual NESO instances
-    execute_local = ExecuteLocal(
+    execute_local = uq.actions.ExecuteLocal(
         f"{vvuq_run_path} {fab.env.remote} {vvuq_config} "
         f"{path_to_vvuq_configs / neso_mesh_file} {solver} {processes} "
         f"{nodes} {cpus_per_process} {wall_time} {neso_outfile}"
     )
 
     # Put together the actions required for the VVUQ campaign
-    actions = Actions(
-        CreateRunDirectory("/tmp", flatten=True),  # noqa: S108
-        Encode(encoder),
+    actions = uq.actions.Actions(
+        uq.actions.CreateRunDirectory("/tmp", flatten=True),  # noqa: S108
+        uq.actions.Encode(encoder),
         execute_local,
-        Decode(decoder),
+        uq.actions.Decode(decoder),
     )
 
     # Make the VVUQ campaign
@@ -767,4 +777,4 @@ def neso_vvuq_campaign(  # noqa: PLR0913
     campaign.set_sampler(my_sampler)
 
     # Run VVUQ
-    campaign.execute(sequential=True).collate()
+    campaign.execute(sequential=run_vvuq_sequential).collate()
