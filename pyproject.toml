@@ -71,6 +71,7 @@ ignore = [
     "D212", # multi-line-summary-first-line
     "D407", # removed dashes lines under sections
     "D417", # argument description in docstring (unreliable)
+    "INP001", # implicit-namespace-package - allow due to FabSim3 packaging conventions
     "ISC001", # simplify implicit str concatenation (ruff-format recommended)
     "N999", # invalid-module-name - follow FabSim3 convention of CamelCase plugin names
 ]
