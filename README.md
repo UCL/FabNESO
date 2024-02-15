@@ -1,7 +1,9 @@
 # FabNESO
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Linting](https://github.com/UCL/fabneso/actions/workflows/linting.yml/badge.svg)](https://github.com/UCL/fabneso/actions/workflows/linting.yml)
+[![Tests](https://github.com/UCL/FabNESO/actions/workflows/tests.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/tests.yml)
+[![Linting](https://github.com/UCL/FabNESO/actions/workflows/linting.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/linting.yml)
+[![Documentation](https://github.com/UCL/FabNESO/actions/workflows/docs.yml/badge.svg)](https://github-pages.ucl.ac.uk/FabNESO/)
 [![Licence](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](./LICENCE)
 
 [Neptune Exploratory SOftware (NESO)](https://github.com/ExCALIBUR-NEPTUNE/NESO) plugin
@@ -61,7 +63,7 @@ fabsim localhost neso:two_stream
 
 The first positional argument after `neso:` specifies the directory within `config_files` that holds the conditions and mesh files to be used.
 
-Additional arguments that can be given the to the `neso` task are:
+Additional arguments that can be given the to the `neso` task include:
 
 - `solver` : chose which NESO solver to run (default = `Electrostatic2D3V`),
 - `conditions_file_name` : Name of conditions XML file in configuration directory (default = `conditions.xml`),

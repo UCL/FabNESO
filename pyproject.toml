@@ -18,10 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Typing :: Typed",
 ]
-dependencies = [
-]
 description = "Neptune Exploratory SOftware (NESO) plugin for FabSim3"
 dynamic = [
+    "dependencies",
     "version",
 ]
 keywords = [
@@ -95,6 +94,9 @@ pylint.max-args = 10
 [tool.setuptools]
 packages = ["FabNESO"]
 
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
 write_to = "FabNESO/_version.py"
@@ -120,6 +122,14 @@ legacy_tox_ini = """
     deps =
         pytest
         pytest-cov
+
+    [testenv:docs]
+    commands =
+        sphinx-apidoc -o docs FabNESO -T -M -e -f
+        sphinx-build -W -b html docs docs/_build/html
+    deps =
+        sphinx
+        sphinx_rtd_theme
 
     [tox]
     env_list =
