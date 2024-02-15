@@ -1,0 +1,17 @@
+{
+ "parameters":
+ {"NUMBER_PARTICLES" : [40000],
+  "INIT_VELOCITY" : [1.0,0.9,1.1],
+  "CHARGE_DENSITY" : [105,101,109],
+  "NUMBER_DENSITY" : [105],
+  "TIME_STEPS" : [180],
+  "WRITE_FIELD_STEPS": [100],
+  "LINE_STEP": [20],
+  "LINE_NUMX": [100],
+  "LINE_NUMY": [1],
+ },
+ "output_columns": [
+  "Step#160/FIELD_EVALUATION_0",
+  "Step#160/x",
+ ]
+}

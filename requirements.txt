@@ -1,2 +1,4 @@
 h5py>=3.10.0
 PyVBMC>=1.0.1
+easyvvuq>=1.2
+chaospy>=4.3.2
