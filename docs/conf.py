@@ -1,4 +1,4 @@
-"""Configuration file for the Sphinx documentation builder."""  # noqa: INP001
+"""Configuration file for the Sphinx documentation builder."""
 
 from importlib.metadata import version as get_version
 
