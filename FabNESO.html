@@ -54,6 +54,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#FabNESO.neso_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_ensemble()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#FabNESO.neso_vbmc"><code class="docutils literal notranslate"><span class="pre">neso_vbmc()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#FabNESO.neso_write_field"><code class="docutils literal notranslate"><span class="pre">neso_write_field()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#FabNESO.neso_pce_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_pce_ensemble()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#FabNESO.neso_pce_analysis"><code class="docutils literal notranslate"><span class="pre">neso_pce_analysis()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="FabNESO.ensemble_tools.html">FabNESO.ensemble_tools module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FabNESO.make_sweep_dir.html">FabNESO.make_sweep_dir module</a></li>
@@ -223,6 +225,77 @@ file with these parameter vaues overriden.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="FabNESO.neso_pce_ensemble">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.</span></span><span class="sig-name descname"><span class="pre">neso_pce_ensemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Electrostatic2D3V'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conditions.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mesh.xml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polynomial_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'pseudo-spectral'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pseudo-spectral-sparse'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'point-collocation'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pseudo-spectral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus_per_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wall_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'00:15:00'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">parameter_bounds_or_overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/tasks.html#neso_pce_ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.neso_pce_ensemble" title="Link to this definition"></a></dt>
+<dd><p>Run ensemble of NESO simulations to perform a polynomial chaos expansion of outputs.</p>
+<p>Generates a set of parameters values (and associated weights) to evaluate model at
+using a quadrature rule, and evaluates model outputs at each of these parameter
+values. The model outputs can then be approximated by an expansion in a set of
+orthogonal (with respect to the assumed distribution over the parameter space)
+polynomials, with the coefficients of the expansion estimated from the sampled
+model outputs. This task just computes the model outputs for the sampled parameter
+values, with the separate <cite>neso_pce_analysis</cite> task using the fetched model outputs
+from this task to estimate the coefficients and so form the polynomial expansion
+approximation to the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> – Directory with ensemble configuration information.</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>solver</strong> – Which NESO solver to use.</p></li>
+<li><p><strong>conditions_file_name</strong> – Name of conditions XML file in configuration directory.</p></li>
+<li><p><strong>mesh_file_name</strong> – Name of mesh XML in configuration directory.</p></li>
+<li><p><strong>polynomial_order</strong> – Polynomial order to use in polynomial chaos expansion.</p></li>
+<li><p><strong>variant</strong> – Polynomial chaos expansion variant to use - one of <cite>point-collocation</cite>
+(point-collocation method), <cite>pseudo-spectral</cite> (pseudo-spectral projection
+method) or <cite>pseudo-spectral-sparse</cite> (pseudo-spectral projection method with
+Smolyak sparse grid).</p></li>
+<li><p><strong>processes</strong> – Number of processes to run in each job in the ensemble.</p></li>
+<li><p><strong>nodes</strong> – Number of nodes to run on. Only applicable when running on a multi-node
+system.</p></li>
+<li><p><strong>cpus_per_process</strong> – Number of processing units to use per process. Only
+applicable when running on a multi-node system.</p></li>
+<li><p><strong>wall_time</strong> – Maximum time to allow job to run for. Only applicable when submitting
+to a job scheduler.</p></li>
+<li><p><strong>**parameter_bounds_or_overrides</strong> – Bounds of parameters to vary in polynomial
+chaos expansion or fixed overrides for parameters from values in conditions
+file in configuration directory. Each value is either a colon-separated
+string <cite>lower_bound:upper_bound</cite> specifying lower and upper bounds for
+independent uniform distributions over parameter values, or a string
+specifying a single int or float, in which case the corresponding parameter
+is considered fixed but the value given is used to override its default
+value in the conditions file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="FabNESO.neso_pce_analysis">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.</span></span><span class="sig-name descname"><span class="pre">neso_pce_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_outputs_script</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'extract_outputs.py'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/tasks.html#neso_pce_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.neso_pce_analysis" title="Link to this definition"></a></dt>
+<dd><p>Analyse outputs from a previous polynomial chaos expansion (PCE) ensemble run.</p>
+<p>Uses run outputs for sampled parameter values to compute a PCE approximation to
+model, and uses this to compute various statistics of output and allowing
+construction of a surrogate model. The analysis results are saved to a pickle file
+<cite>pce_analysis_results.pickle</cite> in the results directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Name of configuration directory with script to use to extract relevant
+solver outputs from results files and output to a JSON file.</p></li>
+<li><p><strong>results_dir</strong> – Directory containing PCE ensemble outputs from a run of <cite>neso_pce</cite>
+task. The analysis results pickle file will be written to this directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>extract_outputs_script</strong> – Name of script for extracting outputs from results
+files in configuration directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
@@ -252,6 +325,8 @@ file with these parameter vaues overriden.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.tasks.html#FabNESO.tasks.neso_write_field"><code class="docutils literal notranslate"><span class="pre">neso_write_field()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.tasks.html#FabNESO.tasks.run_instance_return_field"><code class="docutils literal notranslate"><span class="pre">run_instance_return_field()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.tasks.html#FabNESO.tasks.log_density"><code class="docutils literal notranslate"><span class="pre">log_density()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.tasks.html#FabNESO.tasks.neso_pce_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_pce_ensemble()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.tasks.html#FabNESO.tasks.neso_pce_analysis"><code class="docutils literal notranslate"><span class="pre">neso_pce_analysis()</span></code></a></li>
 </ul>
 </li>
 </ul>

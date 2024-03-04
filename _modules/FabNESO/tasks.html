@@ -80,16 +80,23 @@
 <span class="sd">Defines tasks for running simulations using Neptune Exploratory Software (NESO).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">nullcontext</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">TemporaryDirectory</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeAlias</span>
 
+<span class="kn">import</span> <span class="nn">chaospy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">pyvbmc</span>
+<span class="kn">from</span> <span class="nn">easyvvuq.analysis</span> <span class="kn">import</span> <span class="n">PCEAnalysis</span>
+<span class="kn">from</span> <span class="nn">easyvvuq.sampling</span> <span class="kn">import</span> <span class="n">PCESampler</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">fabsim.base</span> <span class="kn">import</span> <span class="n">fab</span>
@@ -672,6 +679,228 @@
         <span class="p">(</span><span class="n">config_dict</span><span class="p">[</span><span class="s2">&quot;initial_run&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">observed_results</span><span class="p">[</span><span class="s2">&quot;field_value&quot;</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">config_dict</span><span class="p">[</span><span class="s2">&quot;observation_noise_std&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
     <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_parse_pce_bounds_string</span><span class="p">(</span>
+    <span class="n">parameter_scan_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">parameter_scan_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">lower</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_float_or_int_string_literal</span><span class="p">(</span><span class="n">literal</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">literal</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">literal</span><span class="p">)</span>
+
+
+<span class="n">PCEVariant</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;pseudo-spectral&quot;</span><span class="p">,</span> <span class="s2">&quot;pseudo-spectral-sparse&quot;</span><span class="p">,</span> <span class="s2">&quot;point-collocation&quot;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="neso_pce_ensemble">
+<a class="viewcode-back" href="../../FabNESO.tasks.html#FabNESO.neso_pce_ensemble">[docs]</a>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">task</span>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">load_plugin_env_vars</span><span class="p">(</span><span class="s2">&quot;FabNESO&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">neso_pce_ensemble</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Electrostatic2D3V&quot;</span><span class="p">,</span>
+    <span class="n">conditions_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;conditions.xml&quot;</span><span class="p">,</span>
+    <span class="n">mesh_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mesh.xml&quot;</span><span class="p">,</span>
+    <span class="n">polynomial_order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">variant</span><span class="p">:</span> <span class="n">PCEVariant</span> <span class="o">=</span> <span class="s2">&quot;pseudo-spectral&quot;</span><span class="p">,</span>
+    <span class="n">processes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">cpus_per_process</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">wall_time</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;00:15:00&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">parameter_bounds_or_overrides</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run ensemble of NESO simulations to perform a polynomial chaos expansion of outputs.</span>
+
+<span class="sd">    Generates a set of parameters values (and associated weights) to evaluate model at</span>
+<span class="sd">    using a quadrature rule, and evaluates model outputs at each of these parameter</span>
+<span class="sd">    values. The model outputs can then be approximated by an expansion in a set of</span>
+<span class="sd">    orthogonal (with respect to the assumed distribution over the parameter space)</span>
+<span class="sd">    polynomials, with the coefficients of the expansion estimated from the sampled</span>
+<span class="sd">    model outputs. This task just computes the model outputs for the sampled parameter</span>
+<span class="sd">    values, with the separate `neso_pce_analysis` task using the fetched model outputs</span>
+<span class="sd">    from this task to estimate the coefficients and so form the polynomial expansion</span>
+<span class="sd">    approximation to the model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: Directory with ensemble configuration information.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        solver: Which NESO solver to use.</span>
+<span class="sd">        conditions_file_name: Name of conditions XML file in configuration directory.</span>
+<span class="sd">        mesh_file_name: Name of mesh XML in configuration directory.</span>
+<span class="sd">        polynomial_order: Polynomial order to use in polynomial chaos expansion.</span>
+<span class="sd">        variant: Polynomial chaos expansion variant to use - one of `point-collocation`</span>
+<span class="sd">            (point-collocation method), `pseudo-spectral` (pseudo-spectral projection</span>
+<span class="sd">            method) or `pseudo-spectral-sparse` (pseudo-spectral projection method with</span>
+<span class="sd">            Smolyak sparse grid).</span>
+<span class="sd">        processes: Number of processes to run in each job in the ensemble.</span>
+<span class="sd">        nodes: Number of nodes to run on. Only applicable when running on a multi-node</span>
+<span class="sd">            system.</span>
+<span class="sd">        cpus_per_process: Number of processing units to use per process. Only</span>
+<span class="sd">            applicable when running on a multi-node system.</span>
+<span class="sd">        wall_time: Maximum time to allow job to run for. Only applicable when submitting</span>
+<span class="sd">            to a job scheduler.</span>
+<span class="sd">        **parameter_bounds_or_overrides: Bounds of parameters to vary in polynomial</span>
+<span class="sd">            chaos expansion or fixed overrides for parameters from values in conditions</span>
+<span class="sd">            file in configuration directory. Each value is either a colon-separated</span>
+<span class="sd">            string `lower_bound:upper_bound` specifying lower and upper bounds for</span>
+<span class="sd">            independent uniform distributions over parameter values, or a string</span>
+<span class="sd">            specifying a single int or float, in which case the corresponding parameter</span>
+<span class="sd">            is considered fixed but the value given is used to override its default</span>
+<span class="sd">            value in the conditions file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_fab_module_imported</span><span class="p">()</span>
+    <span class="n">parameter_distributions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">parameter_name</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="o">*</span><span class="n">_parse_pce_bounds_string</span><span class="p">(</span><span class="n">string_value</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">string_value</span> <span class="ow">in</span> <span class="n">parameter_bounds_or_overrides</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">string_value</span>
+    <span class="p">}</span>
+    <span class="n">parameter_overrides</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">parameter_name</span><span class="p">:</span> <span class="n">_parse_float_or_int_string_literal</span><span class="p">(</span><span class="n">string_value</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">string_value</span> <span class="ow">in</span> <span class="n">parameter_bounds_or_overrides</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">string_value</span>
+    <span class="p">}</span>
+    <span class="c1"># Map variant specifier to EasyVVUQ PCESampler keyword arguments - regression is</span>
+    <span class="c1"># used to switch between point-collocation (True) and pseudo-spectral (False)</span>
+    <span class="c1"># methods, while sparse (True) enables Smolyak sparse grid with pseudo-spectral</span>
+    <span class="c1"># method.</span>
+    <span class="k">match</span> <span class="n">variant</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s2">&quot;point-collocation&quot;</span><span class="p">:</span>
+            <span class="n">regression</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">sparse</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">case</span> <span class="s2">&quot;pseudo-spectral&quot;</span><span class="p">:</span>
+            <span class="n">regression</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">sparse</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">case</span> <span class="s2">&quot;pseudo-spectral-sparse&quot;</span><span class="p">:</span>
+            <span class="n">regression</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">sparse</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">pce_sampler</span> <span class="o">=</span> <span class="n">PCESampler</span><span class="p">(</span>
+        <span class="n">parameter_distributions</span><span class="p">,</span>
+        <span class="n">polynomial_order</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">polynomial_order</span><span class="p">),</span>
+        <span class="n">regression</span><span class="o">=</span><span class="n">regression</span><span class="p">,</span>
+        <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parameter_samples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pce_sampler</span><span class="p">)</span>
+    <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span> <span class="o">=</span> <span class="n">_check_and_process_resource_args</span><span class="p">(</span>
+        <span class="n">processes</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cpus_per_process</span><span class="p">,</span> <span class="n">wall_time</span>
+    <span class="p">)</span>
+    <span class="n">path_to_config</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">find_config_file_path</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">TemporaryDirectory</span><span class="p">(</span>
+        <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">path_to_config</span><span class="o">.</span><span class="n">parent</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">temporary_config_directory</span><span class="p">:</span>
+        <span class="n">temporary_config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temporary_config_directory</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sample_index</span><span class="p">,</span> <span class="n">parameter_dict</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameter_samples</span><span class="p">):</span>
+            <span class="n">directory_path</span> <span class="o">=</span> <span class="n">temporary_config_path</span> <span class="o">/</span> <span class="s2">&quot;SWEEP&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;sample_</span><span class="si">{</span><span class="n">sample_index</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">path_to_config</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">)</span>
+            <span class="n">edit_parameters</span><span class="p">(</span>
+                <span class="n">directory_path</span> <span class="o">/</span> <span class="n">conditions_file_name</span><span class="p">,</span>
+                <span class="n">parameter_dict</span> <span class="o">|</span> <span class="n">parameter_overrides</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">temporary_config_path</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">path_to_config</span> <span class="o">=</span> <span class="n">temporary_config_path</span>
+        <span class="n">sweep_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_to_config</span> <span class="o">/</span> <span class="s2">&quot;SWEEP&quot;</span><span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">update_environment</span><span class="p">(</span>
+            <span class="n">_create_job_args_dict</span><span class="p">(</span>
+                <span class="n">solver</span><span class="p">,</span>
+                <span class="n">conditions_file_name</span><span class="p">,</span>
+                <span class="n">mesh_file_name</span><span class="p">,</span>
+                <span class="n">processes</span><span class="p">,</span>
+                <span class="n">nodes</span><span class="p">,</span>
+                <span class="n">cpus_per_process</span><span class="p">,</span>
+                <span class="n">wall_time</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">with_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">fab</span><span class="o">.</span><span class="n">run_ensemble</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">sweep_dir</span><span class="p">)</span>
+        <span class="n">job_name</span> <span class="o">=</span> <span class="n">template</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">job_name_template</span><span class="p">)</span>
+        <span class="n">local_results_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">local_results</span><span class="p">)</span> <span class="o">/</span> <span class="n">job_name</span>
+        <span class="n">local_results_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="p">(</span><span class="n">local_results_directory</span> <span class="o">/</span> <span class="s2">&quot;pce_sampler.pickle&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">pce_sampler</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">with</span> <span class="p">(</span><span class="n">local_results_directory</span> <span class="o">/</span> <span class="s2">&quot;parameter_samples.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">parameter_samples</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>  <span class="c1"># noqa: T201</span>
+            <span class="sa">f</span><span class="s2">&quot;Sampler pickle and parameters JSON saved to </span><span class="si">{</span><span class="n">local_results_directory</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Run fetch_results task once runs are completed to also save run outputs &quot;</span>
+            <span class="s2">&quot;to same directory and then run neso_pce_analysis task to compute &quot;</span>
+            <span class="s2">&quot;PCE expansion from run outputs.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="neso_pce_analysis">
+<a class="viewcode-back" href="../../FabNESO.tasks.html#FabNESO.neso_pce_analysis">[docs]</a>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">task</span>
+<span class="nd">@fab</span><span class="o">.</span><span class="n">load_plugin_env_vars</span><span class="p">(</span><span class="s2">&quot;FabNESO&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">neso_pce_analysis</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">results_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">extract_outputs_script</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;extract_outputs.py&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyse outputs from a previous polynomial chaos expansion (PCE) ensemble run.</span>
+
+<span class="sd">    Uses run outputs for sampled parameter values to compute a PCE approximation to</span>
+<span class="sd">    model, and uses this to compute various statistics of output and allowing</span>
+<span class="sd">    construction of a surrogate model. The analysis results are saved to a pickle file</span>
+<span class="sd">    `pce_analysis_results.pickle` in the results directory.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: Name of configuration directory with script to use to extract relevant</span>
+<span class="sd">            solver outputs from results files and output to a JSON file.</span>
+<span class="sd">        results_dir: Directory containing PCE ensemble outputs from a run of `neso_pce`</span>
+<span class="sd">            task. The analysis results pickle file will be written to this directory.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        extract_outputs_script: Name of script for extracting outputs from results</span>
+<span class="sd">           files in configuration directory.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_fab_module_imported</span><span class="p">()</span>
+    <span class="n">path_to_config</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fab</span><span class="o">.</span><span class="n">find_config_file_path</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+    <span class="n">extract_outputs_script_path</span> <span class="o">=</span> <span class="n">path_to_config</span> <span class="o">/</span> <span class="n">extract_outputs_script</span>
+    <span class="n">results_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">results_dir</span><span class="p">)</span>
+    <span class="k">with</span> <span class="p">(</span><span class="n">results_dir</span> <span class="o">/</span> <span class="s2">&quot;pce_sampler.pickle&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pce_sampler</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  <span class="c1"># noqa: S301</span>
+    <span class="k">with</span> <span class="p">(</span><span class="n">results_dir</span> <span class="o">/</span> <span class="s2">&quot;parameter_samples.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">parameter_samples</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">results_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sample_index</span><span class="p">,</span> <span class="n">parameter_dict</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameter_samples</span><span class="p">):</span>
+        <span class="n">sample_results_dir</span> <span class="o">=</span> <span class="n">results_dir</span> <span class="o">/</span> <span class="s2">&quot;RUNS&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;sample_</span><span class="si">{</span><span class="n">sample_index</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">outputs_file</span> <span class="o">=</span> <span class="n">sample_results_dir</span> <span class="o">/</span> <span class="s2">&quot;outputs.json&quot;</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+            <span class="p">[</span>  <span class="c1"># noqa: S603, S607</span>
+                <span class="s2">&quot;python&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">extract_outputs_script_path</span><span class="p">),</span>
+                <span class="n">sample_results_dir</span><span class="p">,</span>
+                <span class="n">outputs_file</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="n">outputs_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">results_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{(</span><span class="n">key</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">outputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">)}</span>
+            <span class="o">|</span> <span class="p">{(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="p">)</span>
+    <span class="n">results_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">results_data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span><span class="n">results_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="p">)</span>
+    <span class="n">pce_analysis</span> <span class="o">=</span> <span class="n">PCEAnalysis</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">pce_sampler</span><span class="p">,</span> <span class="n">qoi_cols</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="n">analysis_results</span> <span class="o">=</span> <span class="n">pce_analysis</span><span class="o">.</span><span class="n">analyse</span><span class="p">(</span><span class="n">results_dataframe</span><span class="p">)</span>
+    <span class="k">with</span> <span class="p">(</span><span class="n">results_dir</span> <span class="o">/</span> <span class="s2">&quot;pce_analysis_results.pickle&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">analysis_results</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
 
 </pre></div>
 
