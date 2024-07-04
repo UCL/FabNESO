@@ -223,14 +223,14 @@ def test_uniformly_spaced_samples(
 ) -> None:
     """Tests the _uniformly_spaced_samples method of ensemble_tools."""
     lower, upper = lower_upper
-    parameter_values = _uniformly_spaced_samples(lower, upper, n_sample)
+    parameter_values = _uniformly_spaced_samples(*lower_upper, n_sample)
     # Check the returned list has the correct number of entries
     assert len(parameter_values) == n_sample
     # Check the values in the generated list are unique
     n_unique_entries = len(set(parameter_values))
     assert len(parameter_values) == n_unique_entries
     for value in parameter_values:
-        assert lower <= value <= upper
+        assert min(lower_upper) <= value <= max(lower_upper)
 
 
 @pytest.mark.parametrize(
