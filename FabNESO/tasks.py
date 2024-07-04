@@ -277,7 +277,7 @@ def neso_grid_ensemble(
             )
         )
         fab.with_config(config)
-        fab.run_ensemble(config, output_path)
+        fab.run_ensemble(config, str(output_path))
 
 
 def _parse_parameter_interval_string(
