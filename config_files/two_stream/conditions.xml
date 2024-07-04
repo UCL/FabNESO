@@ -36,6 +36,10 @@
             <P> particle_initial_velocity = 1.0 </P>
             <P> particle_charge_density = 105.27578027828649 </P>
             <P> particle_number_density = 105.27578027828649 </P>
+            <P> particle_position_seed = 284289374 </P>
+            <P> line_field_deriv_evaluations_step = 20 </P>
+            <P> line_field_deriv_evaluations_numx = 100 </P>
+            <P> line_field_deriv_evaluations_numy = 1 </P>
         </PARAMETERS>
 
         <VARIABLES>

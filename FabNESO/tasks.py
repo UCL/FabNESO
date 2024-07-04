@@ -37,7 +37,13 @@ except ImportError:
     FAB_IMPORTED = False
 
 
-from .ensemble_tools import create_dict_sweep, edit_parameters, list_parameter_values
+from .ensemble_tools import (
+    SamplingRule,
+    create_grid_ensemble,
+    create_qmc_ensemble,
+    edit_parameters,
+    list_parameter_values,
+)
 from .read_outputs import read_hdf5_datasets
 
 
@@ -148,6 +154,7 @@ def neso(
         **parameter_overrides: Additional keyword arguments will be passed to
             ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions
             file with these parameter vaues overriden.
+
     """
     _check_fab_module_imported()
     processes, nodes, cpus_per_process, wall_time = _check_and_process_resource_args(
@@ -191,17 +198,17 @@ def neso(
         )
 
 
-def _parse_parameter_scan_string(
-    parameter_scan_string: str,
+def _parse_parameter_range_string(
+    parameter_range_string: str,
     delimiter: str,
 ) -> tuple[float, float, int]:
-    start, end, n_steps = parameter_scan_string.split(delimiter)
-    return float(start), float(end), int(n_steps)
+    lower, upper, n_sample = parameter_range_string.split(delimiter)
+    return float(lower), float(upper), int(n_sample)
 
 
 @fab.task
 @fab.load_plugin_env_vars("FabNESO")
-def neso_ensemble(
+def neso_grid_ensemble(
     config: str,
     solver: str = "Electrostatic2D3V",
     conditions_file_name: str = "conditions.xml",
@@ -210,10 +217,10 @@ def neso_ensemble(
     nodes: int = 1,
     cpus_per_process: int = 1,
     wall_time: str = "00:15:00",
-    **parameter_scans: str,
+    **parameter_ranges: str,
 ) -> None:
     """
-    Run ensemble of NESO solver instances.
+    Run ensemble of NESO solver instances on a evenly spaced parameter grid.
 
     Args:
         config: Directory with ensemble configuration information.
@@ -229,40 +236,35 @@ def neso_ensemble(
             ensemble. Only applicable when running on a multi-node system.
         wall_time: Maximum time to allow each job in ensemble to run for. Only
             applicable when submitting to a job scheduler.
-        **parameter_scans: The set of parameters to sweep over. A colon separated list
-            of lower bound, upper bound, and steps.
+        **parameter_ranges: The parameter ranges to construct grid over. For each
+            parameter name, a string of the format `lower:upper:n_sample` should be
+            specified, resulting `n_sample` evenly spaced values over the interval
+            `[lower, upper]`. The overall grid is constructed as the tensor product of
+            the samples for each parameter.
+
     """
     _check_fab_module_imported()
     processes, nodes, cpus_per_process, wall_time = _check_and_process_resource_args(
         processes, nodes, cpus_per_process, wall_time
     )
-    path_to_config = Path(fab.find_config_file_path(config))
-    temporary_context: TemporaryDirectory | nullcontext = (
-        TemporaryDirectory(prefix=f"{config}_", dir=path_to_config.parent)
-        if parameter_scans != {}
-        else nullcontext()
+    source_config_path = Path(fab.find_config_file_path(config))
+    temporary_context = TemporaryDirectory(
+        prefix=f"{config}_", dir=source_config_path.parent
     )
     with temporary_context as temporary_config_directory:
-        if parameter_scans != {}:
-            temporary_config_path = Path(temporary_config_directory)
-            # Because FabSIM is a bit weird with commas, build the dict here
-            parameter_scan_dict = {
-                parameter: _parse_parameter_scan_string(values, ":")
-                for parameter, values in parameter_scans.items()
-            }
-            create_dict_sweep(
-                sweep_path=temporary_config_path,
-                destructive=False,
-                copy_dir=path_to_config,
-                edit_file=conditions_file_name,
-                parameter_dict=parameter_scan_dict,
-            )
-
-            # switch our config to the new tmp ones
-            config = temporary_config_path.name
-            path_to_config = temporary_config_path
-
-        sweep_dir = str(path_to_config / "SWEEP")
+        temporary_config_path = Path(temporary_config_directory)
+        output_path = temporary_config_path / "SWEEP"
+        parsed_parameter_ranges = {
+            parameter: _parse_parameter_range_string(values, ":")
+            for parameter, values in parameter_ranges.items()
+        }
+        create_grid_ensemble(
+            output_path=output_path,
+            source_path=source_config_path,
+            conditions_file=conditions_file_name,
+            parameter_ranges=parsed_parameter_ranges,
+        )
+        config = temporary_config_path.name
         fab.update_environment(
             _create_job_args_dict(
                 solver,
@@ -275,7 +277,99 @@ def neso_ensemble(
             )
         )
         fab.with_config(config)
-        fab.run_ensemble(config, sweep_dir)
+        fab.run_ensemble(config, output_path)
+
+
+def _parse_parameter_interval_string(
+    parameter_interval_string: str,
+    delimiter: str,
+) -> tuple[float, float]:
+    lower, upper = parameter_interval_string.split(delimiter)
+    return float(lower), float(upper)
+
+
+@fab.task
+@fab.load_plugin_env_vars("FabNESO")
+def neso_qmc_ensemble(  # noqa: PLR0913
+    config: str,
+    solver: str = "Electrostatic2D3V",
+    conditions_file_name: str = "conditions.xml",
+    mesh_file_name: str = "mesh.xml",
+    processes: int = 4,
+    nodes: int = 1,
+    cpus_per_process: int = 1,
+    wall_time: str = "00:15:00",
+    n_sample: int = 100,
+    seed: int = 1234,
+    rule: SamplingRule = "latin_hypercube",
+    **parameter_intervals: str,
+) -> None:
+    """
+    Run ensemble of NESO solver instances on quasi-Monte Carlo parameter samples.
+
+    Args:
+        config: Directory with conditions and mesh files to create ensemble from.
+
+    Keyword Args:
+        solver: Which NESO solver to use.
+        conditions_file_name: Name of conditions XML file in configuration directory.
+        mesh_file_name: Name of mesh XML in configuration directory.
+        processes: Number of processes to run in each job in the ensemble.
+        nodes: Number of nodes to run each job in ensemble on. Only applicable when
+            running on a multi-node system.
+        cpus_per_process: Number of processing units to use per process for each job in
+            ensemble. Only applicable when running on a multi-node system.
+        wall_time: Maximum time to allow each job in ensemble to run for. Only
+            applicable when submitting to a job scheduler.
+        n_sample: Number of quasi Monte Carlo samples in ensemble.
+        seed: Seed for pseudo-random number generator.
+        rule: String specifying sampling scheme to use.
+        **parameter_intervals: The parameter intervals over which to generate samples
+            from. For each parameter name, a string of the format `lower:upper` should
+            be specified, with the overall joint distribution on the parameter space the
+            product of the uniform distributions on these intervals.
+
+    """
+    _check_fab_module_imported()
+    n_sample = _try_convert_to_int_and_check_positive(n_sample, "n_sample")
+    seed = _try_convert_to_int_and_check_positive(seed, "seed")
+    processes, nodes, cpus_per_process, wall_time = _check_and_process_resource_args(
+        processes, nodes, cpus_per_process, wall_time
+    )
+    source_config_path = Path(fab.find_config_file_path(config))
+    temporary_context = TemporaryDirectory(
+        prefix=f"{config}_", dir=source_config_path.parent
+    )
+    with temporary_context as temporary_config_directory:
+        temporary_config_path = Path(temporary_config_directory)
+        parsed_parameter_intervals = {
+            parameter: _parse_parameter_interval_string(interval_string, ":")
+            for parameter, interval_string in parameter_intervals.items()
+        }
+        output_path = temporary_config_path / "SWEEP"
+        create_qmc_ensemble(
+            output_path=output_path,
+            source_path=source_config_path,
+            conditions_file=conditions_file_name,
+            parameter_intervals=parsed_parameter_intervals,
+            rule=rule,
+            n_sample=n_sample,
+            seed=seed,
+        )
+        config = temporary_config_path.name
+        fab.update_environment(
+            _create_job_args_dict(
+                solver,
+                conditions_file_name,
+                mesh_file_name,
+                processes,
+                nodes,
+                cpus_per_process,
+                wall_time,
+            )
+        )
+        fab.with_config(config)
+        fab.run_ensemble(config, str(output_path))
 
 
 def _parse_vbmc_bounds_string(
@@ -434,7 +528,7 @@ def neso_vbmc(  # noqa: PLR0913
 
     # Make an instance of VBMC
     vbmc = pyvbmc.VBMC(
-        lambda theta: log_density(theta, config_dict),
+        lambda theta: _log_density(theta, config_dict),
         theta_0,
         lower_bounds,
         upper_bounds,
@@ -489,6 +583,7 @@ def neso_write_field(
         **parameter_overrides: Additional keyword arguments will be passed to
             ``FabNESO.ensemble_tools.edit_parameters`` to create a temporary conditions
             file with these parameter vaues overriden.
+
     """
     # Assemble the NESO arguments
     neso_args = _create_job_args_dict(
@@ -518,11 +613,11 @@ def neso_write_field(
     # Write out the returned field to file
     np.savetxt(
         out_file_name,
-        run_instance_return_field(config_dict, para_overrides)["field_value"],
+        _run_instance_return_field(config_dict, para_overrides)["field_value"],
     )
 
 
-def run_instance_return_field(
+def _run_instance_return_field(
     config_dict: dict[str, Any], para_overrides: dict[str, Any]
 ) -> dict[str, np.ndarray]:
     """Run a single instance of the NESO solver and return the observed_field."""
@@ -568,7 +663,7 @@ def run_instance_return_field(
     )
 
 
-def log_density(
+def _log_density(
     theta: list[float],
     config_dict: dict[str, Any],
 ) -> list:
@@ -579,7 +674,7 @@ def log_density(
     )
 
     # Run an instance of NESO and calculate the measured field strength.
-    observed_results = run_instance_return_field(config_dict, parameters)
+    observed_results = _run_instance_return_field(config_dict, parameters)
 
     # Calculate the joint log likelihood using the reference field in the config_dict
     return -(
@@ -782,7 +877,7 @@ def neso_pce_analysis(
         sample_results_dir = results_dir / "RUNS" / f"sample_{sample_index}"
         outputs_file = sample_results_dir / "outputs.json"
         subprocess.call(
-            [  # noqa: S603, S607
+            [  #  noqa: S603, S607
                 "python",
                 str(extract_outputs_script_path),
                 sample_results_dir,
