@@ -1,10 +1,11 @@
 # FabNESO
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Tests](https://github.com/UCL/FabNESO/actions/workflows/tests.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/tests.yml)
-[![Linting](https://github.com/UCL/FabNESO/actions/workflows/linting.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/linting.yml)
-[![Documentation](https://github.com/UCL/FabNESO/actions/workflows/docs.yml/badge.svg)](https://github-pages.ucl.ac.uk/FabNESO/)
+[![Tests status](https://github.com/UCL/FabNESO/actions/workflows/tests.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/tests.yml)
+[![Linting status](https://github.com/UCL/FabNESO/actions/workflows/linting.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/linting.yml)
+[![Documentation status](https://github.com/UCL/FabNESO/actions/workflows/docs.yml/badge.svg)](https://github.com/UCL/FabNESO/actions/workflows/docs.yml)
 [![Licence](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](./LICENCE)
+[![Documentation](https://img.shields.io/badge/Sphinx-documentation-blue?logo=sphinx&logoColor=white)](https://github-pages.ucl.ac.uk/FabNESO/)
 
 [Neptune Exploratory SOftware (NESO)](https://github.com/ExCALIBUR-NEPTUNE/NESO) plugin
 for [FabSim3](https://github.com/djgroen/FabSim3), facilitating execution of NESO
@@ -45,16 +46,16 @@ fabsim localhost install_plugin:FabNESO
 ```
 
 Before the code can be run, a file `machines_FabNESO_user.yml` must be created in the plugin's directory (`$FABSIM3_HOME/plugins/FabNESO/`) containing the paths to the built NESO binaries on each system that will be used for running.
-An example file `machines_FabNESO_user_example.yml` is provided to use as a template.
+An example file [`machines_FabNESO_user_example.yml`](machines_FabNESO_user_example.yml) is provided to use as a template.
 
-### Running simulations locally
+### Running tasks locally
 
 NESO runs by calling the desired solver with a conditions and mesh XML files that define the parameters of the simulation and geometry of the simulation domain respectively.
 Examples of these configuration files are provided in the directories `config_files/two_stream/` (intended for use with NESO's `Electrostatic2D3V` solver) and `config_files/2Din3D-hw/` (for use with the `H3LAPD` solver).
 
 #### Running a single simulation
 
-The FabSIM `neso` task runs a single simulation on the machine of your chosing.
+The [FabNESO `neso` task](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.html#FabNESO.neso) runs a single simulation on the machine of your choosing.
 To run NESO locally using the `Electrostatic2D3V` solver with [the `two_stream` example](https://github.com/ExCALIBUR-NEPTUNE/NESO/tree/main/examples/Electrostatic2D3V/two_stream), run the following command:
 
 ```
@@ -69,7 +70,9 @@ Additional arguments that can be given the to the `neso` task include:
 - `conditions_file_name` : Name of conditions XML file in configuration directory (default = `conditions.xml`),
 - `mesh_file_name` : Name of mesh XML file in configuration directory (default = `mesh.xml`).
 
-Any additional keyword arguments to the task will be used to override the value of parameters in the conditions file. For example to run the `two_stream` example with the `Electorstatic2D3V` solver, with the `num_particles_total` parameter overridden to be 10000 run
+A full list of the arguments that can be passed to the task is available in the [package documentation](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.html#FabNESO.neso).
+
+The `neso` task also supports passing additional keyword arguments to override the value of parameters in the conditions file. For example to run the `two_stream` example with the `Electrostatic2D3V` solver, with the `num_particles_total` parameter overridden to be 10000 run
 
 ```
 fabsim localhost neso:two_stream,num_particles_total=10000
@@ -89,68 +92,23 @@ fabsim localhost fetch_results
 
 #### Running an ensemble of simulations
 
-The FabSIM `neso_ensemble` task runs a series of FabSIM jobs taking a `SWEEP` directory as its primary input.
-This `SWEEP` directory contains any number of subdirectories, each containing a conditions and mesh file for individual NESO jobs.
+FabNESO also provides tasks for running ensembles of NESO simulations - the links to the package documentation for the tasks below give details of the arguments that can be passed.
 
-A utility script [`FabNESO/make_sweep_dir.py`](https://github.com/UCL/FabNESO/blob/main/FabNESO/make_sweep_dir.py) is provided to automatically build this sweep directory and encode the input conditions files with templated parameters selected by the user. It should be executed as `python -m FabNESO.make_sweep_dir`.
+- [`neso_grid_ensemble` task](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.tasks.html#FabNESO.tasks.neso_grid_ensemble): Run an ensemble of NESO solver instances on a parameter grid formed of the tensor product of evenly spaced grids on each parameter.
+- [`neso_qmc_ensemble` task](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.tasks.html#FabNESO.tasks.neso_qmc_ensemble): Run an ensemble of NESO solver instances on quasi-random parameter samples from a uniform distribution over a product of intervals (hypercube) in parameter space, generated using [Chaospy](https://chaospy.readthedocs.io/en/master/). This allows [quasi Monte Carlo (QMC)](https://en.wikipedia.org/wiki/Quasi-Monte_Carlo_method) estimates of integrals to be computed.
+- [`neso_pce_ensemble` task](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.tasks.html#FabNESO.tasks.neso_pce_ensemble): Run an ensemble of NESO solver instances on parameter values forming the nodes of a quadrature rule over a product of intervals (hypercube) in parameter space. This allows performing a [polynomial chaos expansion (PCE)](https://en.wikipedia.org/wiki/Polynomial_chaos) of the solver outputs using [Chaospy](https://chaospy.readthedocs.io/en/master/), with the outputs approximated by an expansion in a set of orthogonal (with respect to the assumed uniform distribution over the parameter space) polynomials. The outputs of this task can be analysed using the [`neso_pce_analysis` task](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.tasks.html#FabNESO.tasks.neso_pce_analysis) to form a PCE approximation to the model.
 
-The script takes the following input parameters (see also output of passing `--help` option):
+#### Calibrating a model using PyVBMC
 
-- `--sweep_path` : a path that will act as the SWEEP directory (default = `$FABSIM3_HOME/plugins/FabNESO/config_files/two_stream_ensemble`),
-- `--n_dirs` : Number of divisions in grid for each parameter (default = `5`),
-- `--destructive` : Deletes the previous tree if it already exists (default = `False`),
-- `--copy_dir` : Copy contents of this dir to each sweep dir (default = `$FABSIM3_HOME/plugins/FabNESO/config_files/two_stream`),
-- `--edit_file`: Template a parameter in this file (default = `conditions.xml`).
+FabNESO also provides [a task `neso_vbmc`](http://github-pages.ucl.ac.uk/FabNESO/FabNESO.tasks.html#FabNESO.tasks.neso_vbmc) for calibrating (inferring the posterior distribution on) the parameters of a NESO model given data corresponding to observations of the model output and a distribution over the parameters corresponding to our prior beliefs. This uses the [PyVBMC](https://acerbilab.github.io/pyvbmc/) package which provides an implementation of [_variational Bayesian Monte Carlo_ (Acerbi, 2018)](https://papers.nips.cc/paper/2018/hash/747c1bcceb6109a4ef936bc70cfe67de-Abstract.html), an approximate inference method designed for fitting computationally expensive models with a limited budget of model evaluations.
 
-To template a single parameter, the following three command line arguments should be added:
-
-- `--para_to_template` : The name of the parameter to template (default = `""`),
-- `--scan_min` : The minimum value of the parameter scan (default = `0`),
-- `--scan_max` : The maximum value of the parameter scan (default = `0`).
-
-An example use to template the `particle_initial_velocity` parameter for 4 values between 0.1 and 2.0 using the the two_stream example files would therefore be:
-
-```
-python -m FabNESO.make_sweep_dir --para_to_template="particle_initial_velocity" --scan_min=0.1 --scan_max=2.0 --n_dirs=4
-```
-
-The script can also template an arbitrary number of parameters in the conditions file using the following command line argument:
-
-- `--parameter_dict` : A Python dict of the parameters to be scanned, with associated minimum and maximum values as a list (default = `""`)
-
-To template both the above `particle_initial_velocity` and the `particle_charge_density` of the simulation between 102 and 109, run the following command:
-
-```
-python -m FabNESO.make_sweep_dir --parameter_dict="{'particle_initial_velocity': [0.1,2.0], 'particle_charge_density': [102,109]}" --n_dirs=4
-```
-
-This will create 16 directories in the `config_files/two_stream_ensemble` for the combination of these scans.
-
-The NESO task `neso_ensemble` can then be run over this sweep directory using the command:
-
-```
-fabsim localhost neso_ensemble:two_stream_ensemble
-```
-
-`neso_ensemble` takes the additional input parameters:
-
-- `solver` : chose which NESO solver to run (default = `Electrostatic2D3V`),
-- `conditions_file_name` : Name of conditions XML file in SWEEP directories (default = `conditions.xml`),
-- `mesh_file_name` : Name of mesh XML file in the SWEEP directories (default = `mesh.xml`).
-
-The results of the jobs are recovered using the same fetch command:
-
-```
-fabsim localhost fetch_results
-```
-
-### Running simulations on a remote system
+### Running tasks on a remote system
 
 To run FabNESO on a remote machine, the previous instructions for running locally can be followed with `localhost` replaced with the remote system of choice.
-Running a single NESO simulation on Kathleen, for example, can be carried out with the command:
+Running a single NESO simulation on ARCHER2, for example, can be carried out with the command:
 
 ```
-fabsim Kathleen neso:two_stream
+fabsim archer2 neso:two_stream
 ```
 
 A list of possible remote destinations for FabSIM is provided using the command:

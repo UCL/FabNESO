@@ -4,19 +4,23 @@ import shutil
 from functools import reduce
 from operator import mul
 from pathlib import Path
-from typing import TypedDict
+from typing import get_args
 
 import pytest
 
 from FabNESO.ensemble_tools import (
-    calculate_parameter_value,
-    create_dict_sweep,
-    create_dir_tree,
+    SamplingRule,
+    _grid_directory_name,
+    _indices_iterator,
+    _qmc_directory_name,
+    _uniformly_spaced_samples,
+    create_grid_ensemble,
+    create_qmc_ensemble,
     edit_parameters,
-    indices_iterator,
     list_parameter_values,
-    return_directory_name,
 )
+
+CONFIG_FILES_PATH = Path(__file__).parents[1] / "config_files"
 
 
 def test_edit_parameters(tmp_path: Path) -> None:
@@ -25,7 +29,7 @@ def test_edit_parameters(tmp_path: Path) -> None:
     parameter_test_value = 10.0
     temp_conditions_path = tmp_path / "conditions.xml"
     shutil.copyfile(
-        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml",
+        CONFIG_FILES_PATH / "two_stream" / "conditions.xml",
         temp_conditions_path,
     )
 
@@ -57,9 +61,7 @@ def _check_parameter_in_conditions(
 
 def test_list_parameter_values() -> None:
     """Test the list_parameter_values method in ensemble_tools."""
-    conditions_file = (
-        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml"
-    )
+    conditions_file = CONFIG_FILES_PATH / "two_stream" / "conditions.xml"
     parameter_values = list_parameter_values(
         conditions_file, "particle_initial_velocity"
     )
@@ -74,7 +76,7 @@ def test_list_parameter_values() -> None:
     # Test raise a ValueError when using an incorrect xml file
     with pytest.raises(ValueError, match=r".*Failed to find CONDITIONS.*"):
         parameter_values = list_parameter_values(
-            Path(__file__).parents[1] / "config_files" / "two_stream" / "mesh.xml",
+            CONFIG_FILES_PATH / "two_stream" / "mesh.xml",
             "particle_initial_velocity",
         )
 
@@ -85,7 +87,7 @@ def test_check_parameter_in_conditions(tmp_path: Path) -> None:
     parameter_test_value = 10.0
     test_cond_path = tmp_path / "conditions.xml"
     shutil.copyfile(
-        Path(__file__).parents[1] / "config_files" / "two_stream" / "conditions.xml",
+        CONFIG_FILES_PATH / "two_stream" / "conditions.xml",
         test_cond_path,
     )
     edit_parameters(test_cond_path, {parameter_to_test: parameter_test_value})
@@ -103,195 +105,136 @@ def test_check_parameter_in_conditions(tmp_path: Path) -> None:
     assert n_different_in_value == 0
 
 
-@pytest.mark.parametrize("n_dirs", [1, 3, 5, 10])
-@pytest.mark.parametrize("destructive", [True, False])
 @pytest.mark.parametrize(
-    "parameter_and_range",
-    [
-        ["particle_initial_velocity", -4.0, 5.0],
-        ["particle_charge_density", 101.0, 108.0],
-        ["particle_number_density", 101.0, 108.0],
-    ],
-)
-def test_create_dir_tree(
-    tmp_path: Path,
-    *,
-    n_dirs: int,
-    destructive: bool,
-    parameter_and_range: list,
-) -> None:
-    """Test the create_dir_tree method of ensemble_tools."""
-    test_sweep_dir = tmp_path / "test_sweep"
-    copy_dir = Path("config_files") / "two_stream"
-    edit_file = "conditions.xml"
-    parameter_to_scan = parameter_and_range[0]
-    scan_range = (parameter_and_range[1], parameter_and_range[2])
-    outdir_prefix = "asd"
-
-    create_dir_tree(
-        sweep_path=test_sweep_dir,
-        n_dirs=n_dirs,
-        destructive=destructive,
-        copy_dir=copy_dir,
-        edit_file=edit_file,
-        parameter_to_scan=parameter_to_scan,
-        scan_range=scan_range,
-        outdir_prefix=outdir_prefix,
-    )
-
-    assert (test_sweep_dir / "SWEEP").is_dir()
-    assert len(list((test_sweep_dir / "SWEEP").iterdir())) == n_dirs
-    for i in range(n_dirs):
-        cond_file = test_sweep_dir / "SWEEP" / f"{outdir_prefix}{i}" / "conditions.xml"
-        assert cond_file.is_file()
-        para_value = calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
-        # Check the parameter has been edited correctly and appears only once
-        n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
-            cond_file, parameter_to_scan, para_value
-        )
-        assert n_equal_in_value == 1
-        assert n_different_in_value == 0
-
-
-class _CreateDirTreeArgsDict(TypedDict):
-    sweep_path: Path
-    n_dirs: int
-    destructive: bool
-    copy_dir: Path
-    edit_file: str
-    parameter_to_scan: str
-    scan_range: tuple[float, float]
-    outdir_prefix: str
-
-
-def test_exceptions_create_dir_tree(tmp_path: Path) -> None:
-    """Test exceptions thrown in create_dir_path."""
-    argument_dict = _CreateDirTreeArgsDict(
-        sweep_path=tmp_path / "test_sweep",
-        n_dirs=5,
-        destructive=True,
-        copy_dir=Path("config_files") / "two_stream",
-        edit_file="conditions.xml",
-        parameter_to_scan="particle_initial_velocity",
-        scan_range=(0.2, 5.0),
-        outdir_prefix="asd",
-    )
-    # Should raise an exception when trying to edit the mesh file
-    argument_dict["edit_file"] = "mesh.xml"
-    with pytest.raises(ValueError, match=r".* a CONDITIONS node.*"):
-        create_dir_tree(**argument_dict)
-    # The directory already exists, so running without destructive should
-    # raise a FileExistsError
-    argument_dict["destructive"] = False
-    argument_dict["edit_file"] = "conditions.xml"
-    with pytest.raises(
-        FileExistsError, match=".*ready exists and not in destructive .*"
-    ):
-        create_dir_tree(**argument_dict)
-    # fake_name.xml doesn't exist, should raise FileNotFoundError
-    argument_dict["destructive"] = True
-    argument_dict["edit_file"] = "fake_name.xml"
-    with pytest.raises(FileNotFoundError, match=".*does not exist"):
-        create_dir_tree(**argument_dict)
-    argument_dict["edit_file"] = "conditions.xml"
-    argument_dict["parameter_to_scan"] = ""
-    with pytest.raises(ValueError, match=".*left empty"):
-        create_dir_tree(**argument_dict)
-
-
-@pytest.mark.parametrize(
-    "n_dirs",
-    [
-        [1, 3, 5],
-    ],
-)
-@pytest.mark.parametrize("destructive", [True, False])
-@pytest.mark.parametrize(
-    "parameter_dict",
+    "parameter_ranges",
     [
         {
-            "particle_initial_velocity": (0.1, 2.5),
-            "particle_charge_density": (102.0, 108.0),
+            "particle_initial_velocity": (0.1, 2.5, 3),
+            "particle_charge_density": (102.0, 108.0, 5),
         },
         {
-            "num_particles_total": (20000, 1000000),
-            "particle_number_density": (102.0, 108.0),
+            "particle_number_density": (102.0, 108.0, 5),
         },
     ],
 )
-def test_create_dict_sweep(
-    tmp_path: Path, *, n_dirs: list[int], destructive: bool, parameter_dict: dict
-) -> None:
+def test_create_grid_ensemble(tmp_path: Path, parameter_ranges: dict) -> None:
     """Test the create_dict_sweep method of ensemble_tools."""
-    sweep_path = tmp_path / "test"
-    copy_dir = Path("config_files") / "two_stream"
-    edit_file = "conditions.xml"
-    # Combine the n_dirs vector into the parameter_dict
-    useable_n_dirs = n_dirs[: len(parameter_dict)]
-    for (key, item), n_dir in zip(parameter_dict.items(), useable_n_dirs, strict=True):
-        parameter_dict[key] = item[:2] + (n_dir,)
-
-    create_dict_sweep(
-        sweep_path=sweep_path,
-        destructive=destructive,
-        copy_dir=copy_dir,
-        edit_file=edit_file,
-        parameter_dict=parameter_dict,
+    output_path = tmp_path / "test" / "SWEEP"
+    source_path = CONFIG_FILES_PATH / "two_stream"
+    conditions_file = "conditions.xml"
+    create_grid_ensemble(
+        output_path=output_path,
+        source_path=source_path,
+        conditions_file=conditions_file,
+        parameter_ranges=parameter_ranges,
     )
-    n_total_directories = reduce(mul, n_dirs[: len(parameter_dict)])
+    grid_shape = tuple(n for *_, n in parameter_ranges.values())
+    grid_size = reduce(mul, grid_shape)
     # Check we make the corect number of directories
-    assert len(list((sweep_path / "SWEEP").iterdir())) == n_total_directories
+    assert len(list(output_path.iterdir())) == grid_size
+
+    parameter_values = {
+        parameter_name: _uniformly_spaced_samples(*lower_upper_n_sample)
+        for parameter_name, lower_upper_n_sample in parameter_ranges.items()
+    }
 
     # Loop through the directories and check the conditions file
-    for indices in indices_iterator(n_dirs[: len(parameter_dict)]):
-        directory_name = return_directory_name(list(parameter_dict.keys()), indices)
-        this_dir = sweep_path / "SWEEP" / directory_name
+    for indices in _indices_iterator(grid_shape):
+        directory_name = _grid_directory_name(list(parameter_ranges.keys()), indices)
+        sample_directory_path = output_path / directory_name
 
         # Check the directory exists
-        assert this_dir.is_dir()
+        assert sample_directory_path.is_dir()
 
         # Check that all files have been copied correctly
-        for f in copy_dir.iterdir():
-            assert (this_dir / f.name).is_file()
+        for f in source_path.iterdir():
+            assert (sample_directory_path / f.name).is_file()
 
         # Check that the parameters have been edited correctly
-        for i in range(len(parameter_dict)):
-            parameter = list(parameter_dict.keys())[i]
-            low, high, n_steps = parameter_dict[parameter]
-            para_value = calculate_parameter_value(n_steps, low, high, indices[i])
+        for i, parameter_name in enumerate(parameter_ranges.keys()):
+            expected_value = parameter_values[parameter_name][indices[i]]
             n_equal_in_value, n_different_in_value = _check_parameter_in_conditions(
-                this_dir / "conditions.xml", parameter, para_value
+                sample_directory_path / "conditions.xml", parameter_name, expected_value
             )
             assert n_equal_in_value == 1
             assert n_different_in_value == 0
 
 
-@pytest.mark.parametrize("n_dirs", [1, 3, 100])
+@pytest.mark.parametrize("n_sample", [1, 5, 10])
+@pytest.mark.parametrize("seed", [1234, 42])
+@pytest.mark.parametrize("rule", get_args(SamplingRule))
 @pytest.mark.parametrize(
-    "scan_range",
+    "parameter_intervals",
     [
-        [1.0, 3.0],
-        [10000, 20000],
-        [5.0, 4.0],
+        {
+            "particle_initial_velocity": (0.1, 2.5),
+            "particle_charge_density": (80.0, 120.0),
+        },
+        {
+            "particle_number_density": (90.0, 110.0),
+        },
     ],
 )
-def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None:
-    """Tests the calculate_parameter_value method of ensemble_tools."""
-    parameter_values = [
-        calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
-        for i in range(n_dirs)
-    ]
+def test_create_qmc_ensemble(
+    tmp_path: Path, n_sample: int, seed: int, rule: str, parameter_intervals: dict
+) -> None:
+    """Test the create_dict_sweep method of ensemble_tools."""
+    output_path = tmp_path / "test" / "SWEEP"
+    source_path = CONFIG_FILES_PATH / "two_stream"
+    conditions_file = "conditions.xml"
+    create_qmc_ensemble(
+        output_path=output_path,
+        source_path=source_path,
+        conditions_file=conditions_file,
+        n_sample=n_sample,
+        seed=seed,
+        rule=rule,
+        parameter_intervals=parameter_intervals,
+    )
+    # Check we make the corect number of directories
+    assert len(list(output_path.iterdir())) == n_sample
+
+    # Loop through the directories and check the conditions file
+    for sample_index in range(n_sample):
+        directory_name = _qmc_directory_name(
+            list(parameter_intervals.keys()), sample_index
+        )
+        sample_directory_path = output_path / directory_name
+
+        # Check the directory exists
+        assert sample_directory_path.is_dir()
+
+        # Check that all files have been copied correctly
+        for f in source_path.iterdir():
+            assert (sample_directory_path / f.name).is_file()
+
+
+@pytest.mark.parametrize("n_sample", [1, 3, 100])
+@pytest.mark.parametrize(
+    "lower_upper",
+    [
+        (1.0, 3.0),
+        (10000, 20000),
+        (5.0, 4.0),
+    ],
+)
+def test_uniformly_spaced_samples(
+    lower_upper: tuple[float, float], n_sample: int
+) -> None:
+    """Tests the _uniformly_spaced_samples method of ensemble_tools."""
+    lower, upper = lower_upper
+    parameter_values = _uniformly_spaced_samples(*lower_upper, n_sample)
     # Check the returned list has the correct number of entries
-    assert len(parameter_values) == n_dirs
+    assert len(parameter_values) == n_sample
     # Check the values in the generated list are unique
     n_unique_entries = len(set(parameter_values))
     assert len(parameter_values) == n_unique_entries
     for value in parameter_values:
-        assert min(scan_range) <= value <= max(scan_range)
+        assert min(lower_upper) <= value <= max(lower_upper)
 
 
 @pytest.mark.parametrize(
-    "n_dirs",
+    "grid_shape",
     [
         [1, 3, 100],
         [20, 20, 20],
@@ -309,25 +252,25 @@ def test_calculate_parameter_value(n_dirs: int, scan_range: list[float]) -> None
         ],
     ],
 )
-def test_return_directory_name(n_dirs: list[int], parameter_list: list[str]) -> None:
-    """Test the return_directory_name function."""
+def test_grid_directory_name(grid_shape: list[int], parameter_list: list[str]) -> None:
+    """Test the _grid_directory_name function."""
     directory_names = []
     # Create a dummy set of indices based on n_dirs
-    for indices in indices_iterator(n_dirs[: len(parameter_list)]):
-        dir_name = return_directory_name(parameter_list, indices)
+    for indices in _indices_iterator(grid_shape[: len(parameter_list)]):
+        dir_name = _grid_directory_name(parameter_list, indices)
         # Check that each parameter only appears once in the directory name
         for parameter in parameter_list:
             assert dir_name.count(parameter) == 1
         directory_names.append(dir_name)
     # Check we've made the correct number of directories
-    assert len(directory_names) == reduce(mul, n_dirs[: len(parameter_list)])
+    assert len(directory_names) == reduce(mul, grid_shape[: len(parameter_list)])
     # Check that we've made unique directories
     n_unique_dirs = len(set(directory_names))
     assert len(directory_names) == n_unique_dirs
 
 
 @pytest.mark.parametrize(
-    "n_dirs",
+    "grid_shape",
     [
         [1, 3, 7],
         [2, 5, 10],
@@ -335,12 +278,12 @@ def test_return_directory_name(n_dirs: list[int], parameter_list: list[str]) -> 
         [4, 6, 9, 1, 5, 4],
     ],
 )
-def test_indices_iterator(n_dirs: list[int]) -> None:
+def test_indices_iterator(grid_shape: list[int]) -> None:
     """Test the indices_iterator from the ensemble_tools."""
     indices_list = []
-    for indices in indices_iterator(n_dirs):
-        assert len(indices) == len(n_dirs)
+    for indices in _indices_iterator(grid_shape):
+        assert len(indices) == len(grid_shape)
         indices_list.append(indices)
-    assert len(indices_list) == reduce(mul, n_dirs)
+    assert len(indices_list) == reduce(mul, grid_shape)
     n_unique_indices = len(set(indices_list))
     assert n_unique_indices == len(indices_list)

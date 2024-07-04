@@ -5,69 +5,27 @@ from __future__ import annotations
 import itertools
 import re
 import shutil
-from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from xml.etree import ElementTree
 
+import chaospy
+
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Mapping
+    from collections.abc import Iterable, Iterator, Mapping
+    from pathlib import Path
+    from typing import TypeAlias
 
 
-def create_dir_tree(
-    *,
-    sweep_path: Path,
-    n_dirs: int,
-    destructive: bool,
-    copy_dir: Path,
-    edit_file: str,
-    parameter_to_scan: str,
-    scan_range: tuple[float, float],
-    outdir_prefix: str,
-) -> None:
-    """Create a directory tree in the sweep_path."""
-    copy_dir = Path(copy_dir)
-    if not copy_dir.is_dir():
-        msg = f"copy_dir {copy_dir} does not exist"
-        raise FileNotFoundError(msg)
-    if not (copy_dir / edit_file).is_file():
-        msg = f"edit_file {copy_dir / edit_file} does not exist"
-        raise FileNotFoundError(msg)
-    if parameter_to_scan is None:
-        msg = "parameter_to_scan not defined"
-        raise TypeError(msg)
-    if parameter_to_scan == "":
-        msg = "parameter_to_scan left empty"
-        raise ValueError(msg)
-
-    # Make the base directory
-    if sweep_path.is_dir():
-        if destructive:
-            shutil.rmtree(sweep_path)
-        else:
-            msg = f"Path {sweep_path} already exists and not in destructive mode"
-            raise FileExistsError(msg)
-    sweep_path.mkdir(parents=True)
-
-    for i in range(n_dirs):
-        para_val = calculate_parameter_value(n_dirs, scan_range[0], scan_range[1], i)
-        new_dir = Path(sweep_path) / "SWEEP" / f"{outdir_prefix}{i}"
-        shutil.copytree(copy_dir, new_dir)
-        # Now we edit the parameter file for our
-        # template scan if we're doing that
-        edit_parameters(new_dir / edit_file, {parameter_to_scan: para_val})
-
-
-def calculate_parameter_value(
-    n_dirs: int,
-    initial_value: float,
-    final_value: float,
-    iteration: int,
-) -> float:
-    """Return the value of the parameter at a given iteration."""
+def _uniformly_spaced_samples(
+    lower: float,
+    upper: float,
+    n_sample: int,
+) -> list[float]:
+    """Return `n_sample` evenly spaced samples over an interval `[lower, upper]`."""
     return (
-        initial_value
-        if n_dirs == 1
-        else initial_value + (iteration / (n_dirs - 1)) * (final_value - initial_value)
+        [lower]
+        if n_sample == 1
+        else [lower + (i / (n_sample - 1)) * (upper - lower) for i in range(n_sample)]
     )
 
 
@@ -78,50 +36,122 @@ def _product_dict(input_dict: dict) -> Iterator[dict]:
         yield dict(zip(keys, values, strict=True))
 
 
-def indices_iterator(n_dirs: list[int]) -> Iterator[tuple[int, ...]]:
-    """Create an iterator for the indices of the dictionary sweep."""
-    yield from itertools.product(*[range(n_dir) for n_dir in n_dirs])
+def _indices_iterator(grid_shape: Iterable[int]) -> Iterator[tuple[int, ...]]:
+    """Create an iterator for the indices of a grid."""
+    yield from itertools.product(*[range(size) for size in grid_shape])
 
 
-def create_dict_sweep(
+def _grid_directory_name(
+    parameter_names: Iterable[str], indices: tuple[int, ...]
+) -> str:
+    """Return a directory name given parameter names and grid indices."""
+    return "-".join(f"{k}_{i}" for k, i in zip(parameter_names, indices, strict=True))
+
+
+def create_grid_ensemble(
     *,
-    sweep_path: Path,
-    destructive: bool,
-    copy_dir: Path,
-    edit_file: str,
-    parameter_dict: dict[str, tuple[float, float, int]],
+    output_path: Path,
+    source_path: Path,
+    conditions_file: str,
+    parameter_ranges: dict[str, tuple[float, float, int]],
 ) -> None:
-    """Use a dictionary with each parameter interval to create a sweep directory."""
-    # If destructive, delete the whole tree if it already exists
-    if destructive and sweep_path.is_dir():
-        shutil.rmtree(sweep_path)
+    """
+    Create an ensemble directory corresponding to parameters on tensor product grid.
+
+    Args:
+        output_path: Path to directory to write ensemble files to.
+        source_path: Path to directory containing 'source' configuration to create
+            ensemble from by varying parameters in conditions file.
+        conditions_file: Name of conditions file in `source_path` directory.
+        parameter_ranges: Dictionary mapping from parameter names to tuples specifying
+            in order the lower bound, upper bound and number of samples in evenly spaced
+            grids on each parameter to be varied, with overall grid being the tensor
+            product of these per-parameter grids.
+
+    """
     # Uniformly spaced grids on [low, high] for each parameter
     parameter_grids = {
-        key: [
-            calculate_parameter_value(n_dir_parameter, low, high, i)
-            for i in range(n_dir_parameter)
-        ]
-        for key, (low, high, n_dir_parameter) in parameter_dict.items()
+        key: _uniformly_spaced_samples(*parameter_range)
+        for key, parameter_range in parameter_ranges.items()
     }
     # Compute Cartesian products of all parameter value combinations plus grid indices
     for parameter_values, indices in zip(
         _product_dict(parameter_grids),
-        indices_iterator([n_dir for *_, n_dir in parameter_dict.values()]),
+        _indices_iterator([n_sample for *_, n_sample in parameter_ranges.values()]),
         strict=True,
     ):
-        directory_name = return_directory_name(list(parameter_values.keys()), indices)
-        directory_path = Path(sweep_path) / "SWEEP" / directory_name
-        shutil.copytree(copy_dir, directory_path)
-        edit_parameters(directory_path / edit_file, parameter_values)
+        directory_name = _grid_directory_name(list(parameter_values.keys()), indices)
+        directory_path = output_path / directory_name
+        shutil.copytree(source_path, directory_path)
+        edit_parameters(directory_path / conditions_file, parameter_values)
 
 
-def return_directory_name(parameter_names: list[str], indices: tuple[int, ...]) -> str:
-    """Return the directory name given parameter names and indices."""
-    return "-".join(f"{k}_{i}" for k, i in zip(parameter_names, indices, strict=True))
+def _qmc_directory_name(parameter_names: list[str], sample_index: int) -> str:
+    """Return a directory name given parameter names and sample index."""
+    return "-".join(parameter_names) + f"_{sample_index}"
+
+
+SamplingRule: TypeAlias = Literal[
+    "additive_recursion", "hammersley", "korobov", "latin_hypercube", "random", "sobol"
+]
+
+
+def create_qmc_ensemble(
+    *,
+    output_path: Path,
+    source_path: Path,
+    conditions_file: str,
+    n_sample: int,
+    seed: int,
+    rule: str,
+    parameter_intervals: dict[str, tuple[float, float]],
+) -> None:
+    """
+    Create an ensemble directory corresponding to quasi-Monte Carlo parameter samples.
+
+    Args:
+        output_path: Path to directory to write ensemble files to.
+        source_path: Path to directory containing 'source' configuration to create
+            ensemble from by varying parameters in conditions file.
+        conditions_file: Name of conditions file in `source_path` directory.
+        parameter_intervals: Dictionary mapping from parameter names to tuples
+            specifying in order the lower and upper bounds of uniform distribution on
+            each each parameter to be varied, with overall joint distribution on
+            parameters corresponding to the product of these distributions (that is
+            assuming independence across the parameters.)
+
+    """
+    uniform_distribution = chaospy.J(
+        *(
+            chaospy.Uniform(lower, upper)
+            for lower, upper in parameter_intervals.values()
+        )
+    )
+    parameter_samples = uniform_distribution.sample(
+        n_sample, seed=seed, rule=rule, include_axis_dim=True
+    )
+    for index, parameter_values in enumerate(parameter_samples.T):
+        directory_name = _qmc_directory_name(list(parameter_intervals.keys()), index)
+        directory_path = output_path / directory_name
+        shutil.copytree(source_path, directory_path)
+        parameter_overrides = dict(
+            zip(parameter_intervals.keys(), parameter_values, strict=True)
+        )
+        edit_parameters(directory_path / conditions_file, parameter_overrides)
 
 
 def list_parameter_values(conditions_file: Path, parameter_name: str) -> list[str]:
-    """Return a list of the values of a given parameter_name in conditions_file."""
+    """
+    Return a list of the values of a given parameter name in conditions_file.
+
+    Args:
+        conditions_file: Path to conditions file to inspect.
+        parameter_name: Name of parameter to get values for.
+
+    Returns:
+        List of values for parameter with name `parameter_name`.
+
+    """
     data = ElementTree.parse(conditions_file)  # noqa: S314
     root = data.getroot()
     conditions = root.find("CONDITIONS")
@@ -157,7 +187,20 @@ def edit_parameters(
     *,
     create_missing: bool = False,
 ) -> None:
-    """Edit parameters in the configuration file to the desired value."""
+    """
+    Edit parameters in a conditions file.
+
+    Args:
+        conditions_file: Source conditions file to edit parameters in.
+        parameter_overrides: Mapping from parameter names to values to override the
+            default value in the conditions file with.
+
+    Keyword Args:
+        create_missing: Whether to create new elements for parameters specified in
+            `parameter_overrides` argument for which there is not an existing element
+            in conditions file.
+
+    """
     parser = ElementTree.XMLParser(  # noqa: S314
         target=ElementTree.TreeBuilder(insert_comments=True)
     )

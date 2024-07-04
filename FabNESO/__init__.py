@@ -3,20 +3,22 @@
 try:
     from .tasks import (
         neso,
-        neso_ensemble,
+        neso_grid_ensemble,
         neso_pce_analysis,
         neso_pce_ensemble,
+        neso_qmc_ensemble,
         neso_vbmc,
         neso_write_field,
     )
 
     __all__ = [
         "neso",
-        "neso_ensemble",
-        "neso_vbmc",
-        "neso_write_field",
+        "neso_grid_ensemble",
         "neso_pce_ensemble",
         "neso_pce_analysis",
+        "neso_qmc_ensemble",
+        "neso_vbmc",
+        "neso_write_field",
     ]
 
 except ImportError:
