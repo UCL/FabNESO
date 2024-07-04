@@ -16,12 +16,12 @@
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="_static/documentation_options.js?v=6aee1ebc"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FabNESO.make_sweep_dir module" href="FabNESO.make_sweep_dir.html" />
+    <link rel="next" title="FabNESO.read_outputs module" href="FabNESO.read_outputs.html" />
     <link rel="prev" title="FabNESO package" href="FabNESO.html" /> 
 </head>
 
@@ -51,23 +51,20 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="FabNESO.html">FabNESO package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso"><code class="docutils literal notranslate"><span class="pre">neso()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_ensemble()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_vbmc"><code class="docutils literal notranslate"><span class="pre">neso_vbmc()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_write_field"><code class="docutils literal notranslate"><span class="pre">neso_write_field()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_grid_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_grid_ensemble()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_pce_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_pce_ensemble()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_pce_analysis"><code class="docutils literal notranslate"><span class="pre">neso_pce_analysis()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_qmc_ensemble"><code class="docutils literal notranslate"><span class="pre">neso_qmc_ensemble()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_vbmc"><code class="docutils literal notranslate"><span class="pre">neso_vbmc()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="FabNESO.html#FabNESO.neso_write_field"><code class="docutils literal notranslate"><span class="pre">neso_write_field()</span></code></a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="FabNESO.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">FabNESO.ensemble_tools module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.create_dir_tree"><code class="docutils literal notranslate"><span class="pre">create_dir_tree()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.calculate_parameter_value"><code class="docutils literal notranslate"><span class="pre">calculate_parameter_value()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.indices_iterator"><code class="docutils literal notranslate"><span class="pre">indices_iterator()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.create_dict_sweep"><code class="docutils literal notranslate"><span class="pre">create_dict_sweep()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.return_directory_name"><code class="docutils literal notranslate"><span class="pre">return_directory_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.create_grid_ensemble"><code class="docutils literal notranslate"><span class="pre">create_grid_ensemble()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.create_qmc_ensemble"><code class="docutils literal notranslate"><span class="pre">create_qmc_ensemble()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.list_parameter_values"><code class="docutils literal notranslate"><span class="pre">list_parameter_values()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FabNESO.ensemble_tools.edit_parameters"><code class="docutils literal notranslate"><span class="pre">edit_parameters()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="FabNESO.make_sweep_dir.html">FabNESO.make_sweep_dir module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FabNESO.read_outputs.html">FabNESO.read_outputs module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FabNESO.tasks.html">FabNESO.tasks module</a></li>
 </ul>
@@ -105,45 +102,81 @@
 <span id="fabneso-ensemble-tools-module"></span><h1>FabNESO.ensemble_tools module<a class="headerlink" href="#module-FabNESO.ensemble_tools" title="Link to this heading"></a></h1>
 <p>A module to create input directories and encode configurations for FabNESO.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="FabNESO.ensemble_tools.create_dir_tree">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">create_dir_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sweep_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_dirs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destructive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edit_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_to_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdir_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#create_dir_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.create_dir_tree" title="Link to this definition"></a></dt>
-<dd><p>Create a directory tree in the sweep_path.</p>
+<dt class="sig sig-object py" id="FabNESO.ensemble_tools.create_grid_ensemble">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">create_grid_ensemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_ranges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#create_grid_ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.create_grid_ensemble" title="Link to this definition"></a></dt>
+<dd><p>Create an ensemble directory corresponding to parameters on tensor product grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_path</strong> – Path to directory to write ensemble files to.</p></li>
+<li><p><strong>source_path</strong> – Path to directory containing ‘source’ configuration to create
+ensemble from by varying parameters in conditions file.</p></li>
+<li><p><strong>conditions_file</strong> – Name of conditions file in <cite>source_path</cite> directory.</p></li>
+<li><p><strong>parameter_ranges</strong> – Dictionary mapping from parameter names to tuples specifying
+in order the lower bound, upper bound and number of samples in evenly spaced
+grids on each parameter to be varied, with overall grid being the tensor
+product of these per-parameter grids.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="FabNESO.ensemble_tools.calculate_parameter_value">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">calculate_parameter_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_dirs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#calculate_parameter_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.calculate_parameter_value" title="Link to this definition"></a></dt>
-<dd><p>Return the value of the parameter at a given iteration.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="FabNESO.ensemble_tools.indices_iterator">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">indices_iterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_dirs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#indices_iterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.indices_iterator" title="Link to this definition"></a></dt>
-<dd><p>Create an iterator for the indices of the dictionary sweep.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="FabNESO.ensemble_tools.create_dict_sweep">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">create_dict_sweep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sweep_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destructive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edit_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#create_dict_sweep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.create_dict_sweep" title="Link to this definition"></a></dt>
-<dd><p>Use a dictionary with each parameter interval to create a sweep directory.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="FabNESO.ensemble_tools.return_directory_name">
-<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">return_directory_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#return_directory_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.return_directory_name" title="Link to this definition"></a></dt>
-<dd><p>Return the directory name given parameter names and indices.</p>
+<dt class="sig sig-object py" id="FabNESO.ensemble_tools.create_qmc_ensemble">
+<span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">create_qmc_ensemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_intervals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#create_qmc_ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.create_qmc_ensemble" title="Link to this definition"></a></dt>
+<dd><p>Create an ensemble directory corresponding to quasi-Monte Carlo parameter samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_path</strong> – Path to directory to write ensemble files to.</p></li>
+<li><p><strong>source_path</strong> – Path to directory containing ‘source’ configuration to create
+ensemble from by varying parameters in conditions file.</p></li>
+<li><p><strong>conditions_file</strong> – Name of conditions file in <cite>source_path</cite> directory.</p></li>
+<li><p><strong>parameter_intervals</strong> – Dictionary mapping from parameter names to tuples
+specifying in order the lower and upper bounds of uniform distribution on
+each each parameter to be varied, with overall joint distribution on
+parameters corresponding to the product of these distributions (that is
+assuming independence across the parameters.)</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="FabNESO.ensemble_tools.list_parameter_values">
 <span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">list_parameter_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#list_parameter_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.list_parameter_values" title="Link to this definition"></a></dt>
-<dd><p>Return a list of the values of a given parameter_name in conditions_file.</p>
+<dd><p>Return a list of the values of a given parameter name in conditions_file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conditions_file</strong> – Path to conditions file to inspect.</p></li>
+<li><p><strong>parameter_name</strong> – Name of parameter to get values for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of values for parameter with name <cite>parameter_name</cite>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="FabNESO.ensemble_tools.edit_parameters">
 <span class="sig-prename descclassname"><span class="pre">FabNESO.ensemble_tools.</span></span><span class="sig-name descname"><span class="pre">edit_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/FabNESO/ensemble_tools.html#edit_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FabNESO.ensemble_tools.edit_parameters" title="Link to this definition"></a></dt>
-<dd><p>Edit parameters in the configuration file to the desired value.</p>
+<dd><p>Edit parameters in a conditions file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conditions_file</strong> – Source conditions file to edit parameters in.</p></li>
+<li><p><strong>parameter_overrides</strong> – Mapping from parameter names to values to override the
+default value in the conditions file with.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>create_missing</strong> – Whether to create new elements for parameters specified in
+<cite>parameter_overrides</cite> argument for which there is not an existing element
+in conditions file.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -153,7 +186,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="FabNESO.html" class="btn btn-neutral float-left" title="FabNESO package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FabNESO.make_sweep_dir.html" class="btn btn-neutral float-right" title="FabNESO.make_sweep_dir module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FabNESO.read_outputs.html" class="btn btn-neutral float-right" title="FabNESO.read_outputs module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

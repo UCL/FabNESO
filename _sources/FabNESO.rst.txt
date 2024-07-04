@@ -13,6 +13,5 @@ Submodules
    :maxdepth: 4
 
    FabNESO.ensemble_tools
-   FabNESO.make_sweep_dir
    FabNESO.read_outputs
    FabNESO.tasks

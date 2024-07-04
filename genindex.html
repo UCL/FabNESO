@@ -15,7 +15,7 @@
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="_static/documentation_options.js?v=6aee1ebc"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
@@ -79,7 +79,6 @@
  <a href="#C"><strong>C</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
- | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -89,13 +88,11 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.calculate_parameter_value">calculate_parameter_value() (in module FabNESO.ensemble_tools)</a>
+      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_grid_ensemble">create_grid_ensemble() (in module FabNESO.ensemble_tools)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_dict_sweep">create_dict_sweep() (in module FabNESO.ensemble_tools)</a>
-</li>
-      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_dir_tree">create_dir_tree() (in module FabNESO.ensemble_tools)</a>
+      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_qmc_ensemble">create_qmc_ensemble() (in module FabNESO.ensemble_tools)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -125,13 +122,6 @@
         <li><a href="FabNESO.ensemble_tools.html#module-FabNESO.ensemble_tools">module</a>
 </li>
       </ul></li>
-      <li>
-    FabNESO.make_sweep_dir
-
-      <ul>
-        <li><a href="FabNESO.make_sweep_dir.html#module-FabNESO.make_sweep_dir">module</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
@@ -151,22 +141,10 @@
   </ul></td>
 </tr></table>
 
-<h2 id="I">I</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.indices_iterator">indices_iterator() (in module FabNESO.ensemble_tools)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.list_parameter_values">list_parameter_values() (in module FabNESO.ensemble_tools)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FabNESO.tasks.html#FabNESO.tasks.log_density">log_density() (in module FabNESO.tasks)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -174,8 +152,6 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FabNESO.make_sweep_dir.html#FabNESO.make_sweep_dir.main">main() (in module FabNESO.make_sweep_dir)</a>
-</li>
       <li>
     module
 
@@ -183,8 +159,6 @@
         <li><a href="FabNESO.html#module-FabNESO">FabNESO</a>
 </li>
         <li><a href="FabNESO.ensemble_tools.html#module-FabNESO.ensemble_tools">FabNESO.ensemble_tools</a>
-</li>
-        <li><a href="FabNESO.make_sweep_dir.html#module-FabNESO.make_sweep_dir">FabNESO.make_sweep_dir</a>
 </li>
         <li><a href="FabNESO.read_outputs.html#module-FabNESO.read_outputs">FabNESO.read_outputs</a>
 </li>
@@ -203,10 +177,10 @@
         <li><a href="FabNESO.tasks.html#FabNESO.tasks.neso">(in module FabNESO.tasks)</a>
 </li>
       </ul></li>
-      <li><a href="FabNESO.html#FabNESO.neso_ensemble">neso_ensemble() (in module FabNESO)</a>
+      <li><a href="FabNESO.html#FabNESO.neso_grid_ensemble">neso_grid_ensemble() (in module FabNESO)</a>
 
       <ul>
-        <li><a href="FabNESO.tasks.html#FabNESO.tasks.neso_ensemble">(in module FabNESO.tasks)</a>
+        <li><a href="FabNESO.tasks.html#FabNESO.tasks.neso_grid_ensemble">(in module FabNESO.tasks)</a>
 </li>
       </ul></li>
       <li><a href="FabNESO.html#FabNESO.neso_pce_analysis">neso_pce_analysis() (in module FabNESO)</a>
@@ -215,12 +189,18 @@
         <li><a href="FabNESO.tasks.html#FabNESO.tasks.neso_pce_analysis">(in module FabNESO.tasks)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="FabNESO.html#FabNESO.neso_pce_ensemble">neso_pce_ensemble() (in module FabNESO)</a>
 
       <ul>
         <li><a href="FabNESO.tasks.html#FabNESO.tasks.neso_pce_ensemble">(in module FabNESO.tasks)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="FabNESO.html#FabNESO.neso_qmc_ensemble">neso_qmc_ensemble() (in module FabNESO)</a>
+
+      <ul>
+        <li><a href="FabNESO.tasks.html#FabNESO.tasks.neso_qmc_ensemble">(in module FabNESO.tasks)</a>
 </li>
       </ul></li>
       <li><a href="FabNESO.html#FabNESO.neso_vbmc">neso_vbmc() (in module FabNESO)</a>
@@ -242,12 +222,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="FabNESO.read_outputs.html#FabNESO.read_outputs.read_hdf5_datasets">read_hdf5_datasets() (in module FabNESO.read_outputs)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.return_directory_name">return_directory_name() (in module FabNESO.ensemble_tools)</a>
-</li>
-      <li><a href="FabNESO.tasks.html#FabNESO.tasks.run_instance_return_field">run_instance_return_field() (in module FabNESO.tasks)</a>
 </li>
   </ul></td>
 </tr></table>

@@ -15,7 +15,7 @@
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../_static/documentation_options.js?v=6aee1ebc"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -81,76 +81,28 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
 
+<span class="kn">import</span> <span class="nn">chaospy</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TypeAlias</span>
 
 
-<div class="viewcode-block" id="create_dir_tree">
-<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_dir_tree">[docs]</a>
-<span class="k">def</span> <span class="nf">create_dir_tree</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">sweep_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">n_dirs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">destructive</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">copy_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">edit_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">parameter_to_scan</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">scan_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-    <span class="n">outdir_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a directory tree in the sweep_path.&quot;&quot;&quot;</span>
-    <span class="n">copy_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">copy_dir</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">copy_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;copy_dir </span><span class="si">{</span><span class="n">copy_dir</span><span class="si">}</span><span class="s2"> does not exist&quot;</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">copy_dir</span> <span class="o">/</span> <span class="n">edit_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;edit_file </span><span class="si">{</span><span class="n">copy_dir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">edit_file</span><span class="si">}</span><span class="s2"> does not exist&quot;</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">parameter_to_scan</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;parameter_to_scan not defined&quot;</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">parameter_to_scan</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;parameter_to_scan left empty&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="c1"># Make the base directory</span>
-    <span class="k">if</span> <span class="n">sweep_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">destructive</span><span class="p">:</span>
-            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">sweep_path</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Path </span><span class="si">{</span><span class="n">sweep_path</span><span class="si">}</span><span class="s2"> already exists and not in destructive mode&quot;</span>
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="n">sweep_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dirs</span><span class="p">):</span>
-        <span class="n">para_val</span> <span class="o">=</span> <span class="n">calculate_parameter_value</span><span class="p">(</span><span class="n">n_dirs</span><span class="p">,</span> <span class="n">scan_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scan_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
-        <span class="n">new_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">sweep_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;SWEEP&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">outdir_prefix</span><span class="si">}{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">copy_dir</span><span class="p">,</span> <span class="n">new_dir</span><span class="p">)</span>
-        <span class="c1"># Now we edit the parameter file for our</span>
-        <span class="c1"># template scan if we&#39;re doing that</span>
-        <span class="n">edit_parameters</span><span class="p">(</span><span class="n">new_dir</span> <span class="o">/</span> <span class="n">edit_file</span><span class="p">,</span> <span class="p">{</span><span class="n">parameter_to_scan</span><span class="p">:</span> <span class="n">para_val</span><span class="p">})</span></div>
-
-
-
-<div class="viewcode-block" id="calculate_parameter_value">
-<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.calculate_parameter_value">[docs]</a>
-<span class="k">def</span> <span class="nf">calculate_parameter_value</span><span class="p">(</span>
-    <span class="n">n_dirs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">initial_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">final_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">iteration</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the value of the parameter at a given iteration.&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_uniformly_spaced_samples</span><span class="p">(</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">n_sample</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `n_sample` evenly spaced samples over an interval `[lower, upper]`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span>
-        <span class="n">initial_value</span>
-        <span class="k">if</span> <span class="n">n_dirs</span> <span class="o">==</span> <span class="mi">1</span>
-        <span class="k">else</span> <span class="n">initial_value</span> <span class="o">+</span> <span class="p">(</span><span class="n">iteration</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_dirs</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">final_value</span> <span class="o">-</span> <span class="n">initial_value</span><span class="p">)</span>
-    <span class="p">)</span></div>
-
+        <span class="p">[</span><span class="n">lower</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n_sample</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">else</span> <span class="p">[</span><span class="n">lower</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_sample</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sample</span><span class="p">)]</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_product_dict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
@@ -160,61 +112,130 @@
         <span class="k">yield</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="indices_iterator">
-<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.indices_iterator">[docs]</a>
-<span class="k">def</span> <span class="nf">indices_iterator</span><span class="p">(</span><span class="n">n_dirs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an iterator for the indices of the dictionary sweep.&quot;&quot;&quot;</span>
-    <span class="k">yield from</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">n_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">n_dir</span> <span class="ow">in</span> <span class="n">n_dirs</span><span class="p">])</span></div>
+<span class="k">def</span> <span class="nf">_indices_iterator</span><span class="p">(</span><span class="n">grid_shape</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an iterator for the indices of a grid.&quot;&quot;&quot;</span>
+    <span class="k">yield from</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">grid_shape</span><span class="p">])</span>
 
 
+<span class="k">def</span> <span class="nf">_grid_directory_name</span><span class="p">(</span>
+    <span class="n">parameter_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a directory name given parameter names and grid indices.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 
-<div class="viewcode-block" id="create_dict_sweep">
-<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_dict_sweep">[docs]</a>
-<span class="k">def</span> <span class="nf">create_dict_sweep</span><span class="p">(</span>
+
+<div class="viewcode-block" id="create_grid_ensemble">
+<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_grid_ensemble">[docs]</a>
+<span class="k">def</span> <span class="nf">create_grid_ensemble</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">sweep_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">destructive</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">copy_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">edit_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">parameter_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">source_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">conditions_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameter_ranges</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use a dictionary with each parameter interval to create a sweep directory.&quot;&quot;&quot;</span>
-    <span class="c1"># If destructive, delete the whole tree if it already exists</span>
-    <span class="k">if</span> <span class="n">destructive</span> <span class="ow">and</span> <span class="n">sweep_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">sweep_path</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an ensemble directory corresponding to parameters on tensor product grid.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_path: Path to directory to write ensemble files to.</span>
+<span class="sd">        source_path: Path to directory containing &#39;source&#39; configuration to create</span>
+<span class="sd">            ensemble from by varying parameters in conditions file.</span>
+<span class="sd">        conditions_file: Name of conditions file in `source_path` directory.</span>
+<span class="sd">        parameter_ranges: Dictionary mapping from parameter names to tuples specifying</span>
+<span class="sd">            in order the lower bound, upper bound and number of samples in evenly spaced</span>
+<span class="sd">            grids on each parameter to be varied, with overall grid being the tensor</span>
+<span class="sd">            product of these per-parameter grids.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Uniformly spaced grids on [low, high] for each parameter</span>
     <span class="n">parameter_grids</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">key</span><span class="p">:</span> <span class="p">[</span>
-            <span class="n">calculate_parameter_value</span><span class="p">(</span><span class="n">n_dir_parameter</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dir_parameter</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">n_dir_parameter</span><span class="p">)</span> <span class="ow">in</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">_uniformly_spaced_samples</span><span class="p">(</span><span class="o">*</span><span class="n">parameter_range</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">parameter_range</span> <span class="ow">in</span> <span class="n">parameter_ranges</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">}</span>
     <span class="c1"># Compute Cartesian products of all parameter value combinations plus grid indices</span>
     <span class="k">for</span> <span class="n">parameter_values</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
         <span class="n">_product_dict</span><span class="p">(</span><span class="n">parameter_grids</span><span class="p">),</span>
-        <span class="n">indices_iterator</span><span class="p">([</span><span class="n">n_dir</span> <span class="k">for</span> <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">n_dir</span> <span class="ow">in</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]),</span>
+        <span class="n">_indices_iterator</span><span class="p">([</span><span class="n">n_sample</span> <span class="k">for</span> <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">n_sample</span> <span class="ow">in</span> <span class="n">parameter_ranges</span><span class="o">.</span><span class="n">values</span><span class="p">()]),</span>
         <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="n">directory_name</span> <span class="o">=</span> <span class="n">return_directory_name</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">parameter_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">indices</span><span class="p">)</span>
-        <span class="n">directory_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">sweep_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;SWEEP&quot;</span> <span class="o">/</span> <span class="n">directory_name</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">copy_dir</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">)</span>
-        <span class="n">edit_parameters</span><span class="p">(</span><span class="n">directory_path</span> <span class="o">/</span> <span class="n">edit_file</span><span class="p">,</span> <span class="n">parameter_values</span><span class="p">)</span></div>
+        <span class="n">directory_name</span> <span class="o">=</span> <span class="n">_grid_directory_name</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">parameter_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="n">directory_path</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">directory_name</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">)</span>
+        <span class="n">edit_parameters</span><span class="p">(</span><span class="n">directory_path</span> <span class="o">/</span> <span class="n">conditions_file</span><span class="p">,</span> <span class="n">parameter_values</span><span class="p">)</span></div>
 
 
 
-<div class="viewcode-block" id="return_directory_name">
-<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.return_directory_name">[docs]</a>
-<span class="k">def</span> <span class="nf">return_directory_name</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the directory name given parameter names and indices.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+<span class="k">def</span> <span class="nf">_qmc_directory_name</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">sample_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a directory name given parameter names and sample index.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">sample_index</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="n">SamplingRule</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;additive_recursion&quot;</span><span class="p">,</span> <span class="s2">&quot;hammersley&quot;</span><span class="p">,</span> <span class="s2">&quot;korobov&quot;</span><span class="p">,</span> <span class="s2">&quot;latin_hypercube&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;sobol&quot;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="create_qmc_ensemble">
+<a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.create_qmc_ensemble">[docs]</a>
+<span class="k">def</span> <span class="nf">create_qmc_ensemble</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">source_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">conditions_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">n_sample</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameter_intervals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an ensemble directory corresponding to quasi-Monte Carlo parameter samples.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_path: Path to directory to write ensemble files to.</span>
+<span class="sd">        source_path: Path to directory containing &#39;source&#39; configuration to create</span>
+<span class="sd">            ensemble from by varying parameters in conditions file.</span>
+<span class="sd">        conditions_file: Name of conditions file in `source_path` directory.</span>
+<span class="sd">        parameter_intervals: Dictionary mapping from parameter names to tuples</span>
+<span class="sd">            specifying in order the lower and upper bounds of uniform distribution on</span>
+<span class="sd">            each each parameter to be varied, with overall joint distribution on</span>
+<span class="sd">            parameters corresponding to the product of these distributions (that is</span>
+<span class="sd">            assuming independence across the parameters.)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uniform_distribution</span> <span class="o">=</span> <span class="n">chaospy</span><span class="o">.</span><span class="n">J</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">(</span>
+            <span class="n">chaospy</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="ow">in</span> <span class="n">parameter_intervals</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">parameter_samples</span> <span class="o">=</span> <span class="n">uniform_distribution</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+        <span class="n">n_sample</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span> <span class="n">include_axis_dim</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">parameter_values</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameter_samples</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
+        <span class="n">directory_name</span> <span class="o">=</span> <span class="n">_qmc_directory_name</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">parameter_intervals</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">index</span><span class="p">)</span>
+        <span class="n">directory_path</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">directory_name</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">)</span>
+        <span class="n">parameter_overrides</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">parameter_intervals</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">parameter_values</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">edit_parameters</span><span class="p">(</span><span class="n">directory_path</span> <span class="o">/</span> <span class="n">conditions_file</span><span class="p">,</span> <span class="n">parameter_overrides</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="list_parameter_values">
 <a class="viewcode-back" href="../../FabNESO.ensemble_tools.html#FabNESO.ensemble_tools.list_parameter_values">[docs]</a>
 <span class="k">def</span> <span class="nf">list_parameter_values</span><span class="p">(</span><span class="n">conditions_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a list of the values of a given parameter_name in conditions_file.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of the values of a given parameter name in conditions_file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        conditions_file: Path to conditions file to inspect.</span>
+<span class="sd">        parameter_name: Name of parameter to get values for.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of values for parameter with name `parameter_name`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">conditions_file</span><span class="p">)</span>  <span class="c1"># noqa: S314</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
     <span class="n">conditions</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;CONDITIONS&quot;</span><span class="p">)</span>
@@ -253,7 +274,20 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">create_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Edit parameters in the configuration file to the desired value.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Edit parameters in a conditions file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        conditions_file: Source conditions file to edit parameters in.</span>
+<span class="sd">        parameter_overrides: Mapping from parameter names to values to override the</span>
+<span class="sd">            default value in the conditions file with.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        create_missing: Whether to create new elements for parameters specified in</span>
+<span class="sd">            `parameter_overrides` argument for which there is not an existing element</span>
+<span class="sd">            in conditions file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">XMLParser</span><span class="p">(</span>  <span class="c1"># noqa: S314</span>
         <span class="n">target</span><span class="o">=</span><span class="n">ElementTree</span><span class="o">.</span><span class="n">TreeBuilder</span><span class="p">(</span><span class="n">insert_comments</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="p">)</span>
